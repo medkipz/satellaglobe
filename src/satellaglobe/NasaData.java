@@ -1,4 +1,4 @@
-package src;
+package src.satellaglobe;
 import java.util.*;
 
 public class NasaData {
