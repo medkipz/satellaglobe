@@ -24,5 +24,7 @@ public class NasaData {
 		String input = scanner.nextLine();
 
 		HttpRequester.getUrlData(locationUrl + "/" + input + "/1");
+
+		scanner.close();
 	}
 }
