@@ -20,5 +20,3 @@ public final class HttpRequester {
 			.join();
 	}
 }
-
-//Another Comment
