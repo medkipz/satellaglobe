@@ -20,6 +20,7 @@ public class NasaData {
 		System.out.println(satellitesNames);
 		System.out.println(satelliteIds);
 
+		//test
 		// Later, this text input can be changed to a picker in the GUI
 		Scanner scanner = new Scanner(System.in);
 
