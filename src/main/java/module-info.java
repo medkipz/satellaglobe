@@ -1,8 +1,9 @@
-module medkipz {
+module satellaglobe {
     requires javafx.controls;
     requires javafx.fxml;
     requires java.net.http;
+	requires java.sql;
 
-    opens medkipz to javafx.fxml;
-    exports medkipz;
+    opens satellaglobe to javafx.fxml;
+    exports satellaglobe;
 }

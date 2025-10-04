@@ -1,8 +1,11 @@
-package medkipz;
+package satellaglobe;
 import java.util.*;
 import java.util.regex.*;
 
-public final class XMLParser {
+/**
+ * Utility class for parsing XML data.
+ */
+public final class XMLUtils {
 	/**
 	 * Parse XML data to extract values of a specific tag.
 	 * @param xmlData The XML data as a String
@@ -12,6 +15,7 @@ public final class XMLParser {
 	public static final List<String> parseTags(String xmlData, String tagName) {
 		List<String> result = new ArrayList<>();
 
+		// TODO parsing xml with regex is a HACK! MAKE THIS BETTER!!!
 		Pattern pattern = Pattern.compile("<" + tagName + ">(.*?)</" + tagName + ">");
 		Matcher matcher = pattern.matcher(xmlData);
 

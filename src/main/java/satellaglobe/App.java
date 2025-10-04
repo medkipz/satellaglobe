@@ -1,4 +1,4 @@
-package medkipz;
+package satellaglobe;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;

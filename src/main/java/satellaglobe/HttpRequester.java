@@ -1,7 +1,10 @@
-package medkipz;
+package satellaglobe;
 import java.net.URI;
 import java.net.http.*;
 
+/**
+ * Utility class for making HTTP requests.
+ */
 public final class HttpRequester {
 	private static final HttpClient client = HttpClient.newHttpClient();
 
