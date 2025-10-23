@@ -23,10 +23,10 @@ public class NasaData {
 		// Later, this text input can be changed to a picker in the GUI
 		Scanner scanner = new Scanner(System.in);
 
-		/* 
+		
 		System.out.print("Enter a satellite ID from the list above: ");
 		String inputId = scanner.nextLine();
-		*/
+		
 
 		System.out.print("Enter a start date [YYYY-MM-DD]: ");
 		Date inputStartDate = java.sql.Date.valueOf(scanner.nextLine());
@@ -36,11 +36,10 @@ public class NasaData {
 		Date inputEndDate = java.sql.Date.valueOf(scanner.nextLine());
 		String isoEnd = DateUtils.toIsoDateString(inputEndDate);
 
-		// Despite the fact that the request accepts comma separated satellite IDs, it works inconsistently the more IDs you add
-		// Hopefully we don't get ratelimited, but realistically we aren't going to be making requests this often
-		for (String satelliteId : satelliteIds) {
-			String locationData = HttpRequester.getUrlData(locationUrl + "/" + satelliteId + "/" + isoStart + "," + isoEnd + "/geo");
-			System.out.println(locationData);
-		}
+	String locationData = HttpRequester.getUrlData(locationUrl + "/" + inputId + "/" + isoStart + "," + isoEnd + "/geo");
+	Map<String, Object> locationMap = XMLUtils.convertXmlToMap(locationData);
+		
+		System.out.println(locationMap);
+
 	}
 }
