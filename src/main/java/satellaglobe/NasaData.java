@@ -26,7 +26,6 @@ public class NasaData {
 		
 		System.out.print("Enter a satellite ID from the list above: ");
 		String inputId = scanner.nextLine();
-		
 
 		System.out.print("Enter a start date [YYYY-MM-DD]: ");
 		Date inputStartDate = java.sql.Date.valueOf(scanner.nextLine());
@@ -36,8 +35,10 @@ public class NasaData {
 		Date inputEndDate = java.sql.Date.valueOf(scanner.nextLine());
 		String isoEnd = DateUtils.toIsoDateString(inputEndDate);
 
-	String locationData = HttpRequester.getUrlData(locationUrl + "/" + inputId + "/" + isoStart + "," + isoEnd + "/geo");
-	Map<String, Object> locationMap = XMLUtils.convertXmlToMap(locationData);
+		scanner.close();
+
+		String locationData = HttpRequester.getUrlData(locationUrl + "/" + inputId + "/" + isoStart + "," + isoEnd + "/geo");
+		Map<String, Object> locationMap = XMLUtils.convertXmlToMap(locationData);
 		
 		System.out.println(locationMap);
 
