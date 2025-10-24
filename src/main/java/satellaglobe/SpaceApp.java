@@ -2,7 +2,9 @@ package satellaglobe;
 
 import javafx.application.Application;
 import javafx.scene.*;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.stage.*;
@@ -31,6 +33,10 @@ public class SpaceApp extends Application {
         Sphere globe = new Sphere(50);
         globe.translateXProperty().set(WIDTH/2);
         globe.translateYProperty().set(HEIGHT/2);
+        Image globeTexture = new Image(getClass().getResource("/satellaglobe/globeTexture.jpg").toExternalForm());
+        PhongMaterial globeMaterial = new PhongMaterial();
+        globeMaterial.setDiffuseMap(globeTexture);
+        globe.setMaterial(globeMaterial);
 
         //Makes group of 'Earth' and satallites to be instantiated
         Group spaceUI = new Group();
