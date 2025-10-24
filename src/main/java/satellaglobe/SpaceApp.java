@@ -4,6 +4,7 @@ import java.util.*;
 
 import javafx.application.Application;
 import javafx.scene.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import javafx.scene.control.ComboBox;
 import javafx.scene.input.KeyEvent;
