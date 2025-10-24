@@ -54,7 +54,7 @@ public class Satellite extends Sphere {
         hoverColor.setDiffuseColor(Color.ORANGE);
 
         //Changes satellite color to orange and displays the popup when hovered over
-        this.addEventHandler(MouseEvent.MOUSE_ENTERED, _ -> {
+        this.addEventHandler(MouseEvent.MOUSE_ENTERED, unused -> {
             this.setMaterial(hoverColor);
             Point2D screenPos = this.localToScreen(0, 0);
             satInfo.show(this, screenPos.getX() + 10, screenPos.getY() + 10);
@@ -63,7 +63,7 @@ public class Satellite extends Sphere {
         });
 
         //Removes coloring and popup once mouse is moved away from the satellite
-        this.addEventHandler(MouseEvent.MOUSE_EXITED, _ -> {
+        this.addEventHandler(MouseEvent.MOUSE_EXITED, unused -> {
             this.setMaterial(null);
             satInfo.hide();
         });

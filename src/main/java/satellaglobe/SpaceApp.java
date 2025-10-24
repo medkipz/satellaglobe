@@ -1,19 +1,23 @@
 package satellaglobe;
 
+import java.util.*;
+
 import javafx.application.Application;
 import javafx.scene.*;
-import javafx.scene.image.Image;
+import javafx.scene.layout.Pane;
+import javafx.scene.control.ComboBox;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.stage.*;
+import javafx.collections.*;
 
 /**
  * SpaceApp Application creates 3D model for satellite representation 
  * 
  * @author Yingling, Rippey
- * 
+ * 	
  * @version 1.0
  */
 public class SpaceApp extends Application {
@@ -21,6 +25,13 @@ public class SpaceApp extends Application {
     //Scene size variables
     private static final int HEIGHT = 900;
     private static final int WIDTH = 1600;
+
+	private static final ObservableList<String> satelliteNames = FXCollections.observableList(
+		XMLUtils.parseTags(
+			HttpRequester.getUrlData("https://sscweb.gsfc.nasa.gov/WS/sscr/2/observatories"),
+			"Name"
+		)
+	);
 
     //Stops alert related to the switch statment
     @SuppressWarnings("incomplete-switch")
@@ -51,8 +62,21 @@ public class SpaceApp extends Application {
         //Sets up a javafx perspective camera to allow for model translation by the user
         Camera telescope = new PerspectiveCamera();
 
-        //Sets up the scene to be displayed with the group and camera
-        Scene space = new Scene(spaceUI, WIDTH, HEIGHT);
+        // Use a Pane as the scene root so we can overlay 2D controls (ComboBox)
+        // on top of the 3D content without the controls being affected by
+        // the 3D group's transforms (rotation/translation).
+        Pane root = new Pane();
+        root.getChildren().add(spaceUI);
+
+		ComboBox<String> satellitePicker = new ComboBox<>(satelliteNames);
+		satellitePicker.setLayoutX(20);
+		satellitePicker.setLayoutY(20);
+
+		// Add the picker to the UI root (not the 3D group) so it is visible
+		root.getChildren().add(satellitePicker);
+
+        //Sets up the scene to be displayed with the root and camera
+        Scene space = new Scene(root, WIDTH, HEIGHT);
         space.setCamera(telescope);
 
         //Key press event handler to zoom in and out and rotate the group
