@@ -59,7 +59,6 @@ public class SpaceApp extends Application {
         //test satellites
         model.getChildren().add(new Satellite("s1", 50, 50, 50));
         model.getChildren().add(new Satellite("s2", -50, -50, -50));
-        
 
         // Use a Pane as the scene root so we can overlay 2D controls
        	SubScene view3d = new SubScene(model, WIDTH, HEIGHT, true, SceneAntialiasing.BALANCED);
@@ -68,7 +67,6 @@ public class SpaceApp extends Application {
 
 		BorderPane ui = new BorderPane();
 		ui.setCenter(view3d);
-		//view3d.setCamera(camera);
 
 		ComboBox<String> satellitePicker = new ComboBox<>(satelliteNames);
 		ToolBar toolBar = new ToolBar(satellitePicker);
