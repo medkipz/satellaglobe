@@ -1,5 +1,6 @@
 package satellaglobe;
 
+import java.util.*;
 import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.image.Image;
@@ -27,15 +28,16 @@ public class SpaceApp extends Application {
     private static final int HEIGHT = 900;
     private static final int WIDTH = 1600;
 
+	private Satellite currentSatellite;
+
 	private double mouseStartX;
 	private double modelStartX;
-
-	private static final ObservableList<String> satelliteNames = FXCollections.observableList(NasaApiClient.GetAllSatelliteNames());
-	private static final ObservableList<String> satelliteIds = FXCollections.observableList(NasaApiClient.GetAllSatelliteIds());
 
     //Main method override for java applications
     @Override
     public void start(Stage stage) throws Exception {
+		final ObservableList<String> satelliteNames = FXCollections.observableList(NasaApiClient.GetAllActiveSatelliteNames());
+		final Map<String, String> satelliteIdHashMap = NasaApiClient.GetSatelliteNameIdMap();
 
         //3D model to represent Earth and center it in the scene
         Sphere globe = new Sphere(50);
@@ -62,11 +64,34 @@ public class SpaceApp extends Application {
 
 		ComboBox<String> satellitePicker = new ComboBox<>(satelliteNames);
 		satellitePicker.setPromptText("Select the satellite you wish to view.");
-		satellitePicker.setOnAction(event -> {
+		satellitePicker.setOnAction(unused -> {
 			String selected = satellitePicker.getValue();
-			if (selected != null) {
-				System.out.println(selected);
+			String selectedId = satelliteIdHashMap.get(selected);
+			double[] coordinates =  NasaApiClient.GetSatelliteCoordinates(selectedId);
+
+			double magnitude = Math.sqrt(
+				coordinates[0] * coordinates[0] +
+				coordinates[1] * coordinates[1] +
+				coordinates[2] * coordinates[2]
+			);
+
+			double[] unitCoordinates = new double[] {
+				coordinates[0] / magnitude,
+				coordinates[1] / magnitude,
+				coordinates[2] / magnitude
+			};
+
+			if (currentSatellite != null) {
+				model.getChildren().remove(currentSatellite);
 			}
+
+			currentSatellite = new Satellite(
+				selected,
+				unitCoordinates[0] * 100,
+				unitCoordinates[1] * 100,
+				unitCoordinates[2] * 100
+			);
+			model.getChildren().add(currentSatellite);
 		});
 
 		ToolBar toolBar = new ToolBar(satellitePicker);
