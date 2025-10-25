@@ -3,7 +3,6 @@ import java.util.*;
 import java.util.regex.*;
 import java.io.StringReader;
 import javax.xml.parsers.*;
-import javax.xml.XMLConstants;
 import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 

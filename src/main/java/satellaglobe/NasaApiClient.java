@@ -6,7 +6,6 @@ import java.util.List;
  * Utility class for interacting with the NASA API.
  */
 public class NasaApiClient {
-
 	/**
 	 * Get a list of all satellite names from the NASA API.
 	 * @return A list of satellite names

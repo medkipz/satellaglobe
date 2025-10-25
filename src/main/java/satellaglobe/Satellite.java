@@ -60,8 +60,6 @@ public class Satellite extends Sphere {
             this.setMaterial(hoverColor);
             Point2D screenPos = this.localToScreen(0, 0);
             satInfo.show(this, screenPos.getX() + 10, screenPos.getY() + 10);
-            
-            
         });
 
         //Removes coloring and popup once mouse is moved away from the satellite

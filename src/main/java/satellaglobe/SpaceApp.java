@@ -30,12 +30,8 @@ public class SpaceApp extends Application {
 	private double mouseStartX;
 	private double modelStartX;
 
-	private static final ObservableList<String> satelliteNames = FXCollections.observableList(
-		XMLUtils.parseTags(
-			HttpRequester.getUrlData("https://sscweb.gsfc.nasa.gov/WS/sscr/2/observatories"),
-			"Name"
-		)
-	);
+	private static final ObservableList<String> satelliteNames = FXCollections.observableList(NasaApiClient.GetAllSatelliteNames());
+	private static final ObservableList<String> satelliteIds = FXCollections.observableList(NasaApiClient.GetAllSatelliteIds());
 
     //Main method override for java applications
     @Override
@@ -55,10 +51,6 @@ public class SpaceApp extends Application {
 		model.setTranslateX(WIDTH / 2);
 		model.setTranslateY(HEIGHT / 2);
 		model.setTranslateZ(-1000);
-		
-        //test satellites
-        model.getChildren().add(new Satellite("s1", 50, 50, 50));
-        model.getChildren().add(new Satellite("s2", -50, -50, -50));
 
         // Use a Pane as the scene root so we can overlay 2D controls
        	SubScene view3d = new SubScene(model, WIDTH, HEIGHT, true, SceneAntialiasing.BALANCED);
@@ -69,6 +61,14 @@ public class SpaceApp extends Application {
 		ui.setCenter(view3d);
 
 		ComboBox<String> satellitePicker = new ComboBox<>(satelliteNames);
+		satellitePicker.setPromptText("Select the satellite you wish to view.");
+		satellitePicker.setOnAction(event -> {
+			String selected = satellitePicker.getValue();
+			if (selected != null) {
+				System.out.println(selected);
+			}
+		});
+
 		ToolBar toolBar = new ToolBar(satellitePicker);
 		toolBar.setOrientation(Orientation.VERTICAL);
 		ui.setLeft(toolBar);
