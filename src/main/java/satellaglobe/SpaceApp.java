@@ -1,7 +1,5 @@
 package satellaglobe;
 
-import java.util.*;
-
 import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.image.Image;
@@ -27,6 +25,9 @@ public class SpaceApp extends Application {
     private static final int HEIGHT = 900;
     private static final int WIDTH = 1600;
 
+	private double mouseStartX;
+	private double modelStartX;
+
 	private static final ObservableList<String> satelliteNames = FXCollections.observableList(
 		XMLUtils.parseTags(
 			HttpRequester.getUrlData("https://sscweb.gsfc.nasa.gov/WS/sscr/2/observatories"),
@@ -39,77 +40,63 @@ public class SpaceApp extends Application {
 
     //Main method override for java applications
     @Override
-    public void start(Stage arg0) throws Exception {
+    public void start(Stage stage) throws Exception {
 
         //3D model to represent Earth and center it in the scene
         Sphere globe = new Sphere(50);
-        globe.translateXProperty().set(WIDTH/2);
-        globe.translateYProperty().set(HEIGHT/2);
         Image globeTexture = new Image(getClass().getResource("/satellaglobe/globeTexture.jpg").toExternalForm());
         PhongMaterial globeMaterial = new PhongMaterial();
         globeMaterial.setDiffuseMap(globeTexture);
         globe.setMaterial(globeMaterial);
 
         //Makes group of 'Earth' and satallites to be instantiated
-        Group spaceUI = new Group();
-        spaceUI.getChildren().add(globe);
+        Group model = new Group();
+		model.setTranslateZ(-1000);
+		model.setTranslateX(WIDTH / 2);
+		model.setTranslateY(HEIGHT / 2);
+        model.getChildren().add(globe);
+		
         //test satellites
-        spaceUI.getChildren().add(new Satellite("s1", WIDTH/3, HEIGHT/3, 200));
-        spaceUI.getChildren().add(new Satellite("s2", WIDTH/1.2, HEIGHT/1.5, 50));
+        model.getChildren().add(new Satellite("s1", 50, 50, 50));
+        model.getChildren().add(new Satellite("s2", -50, -50, -50));
 
         //Makes the center of rotation for the group the y-axis
-        spaceUI.setRotationAxis(Rotate.Y_AXIS);
+        model.setRotationAxis(Rotate.Y_AXIS);
 
         //Sets up a javafx perspective camera to allow for model translation by the user
-        Camera telescope = new PerspectiveCamera();
+        Camera camera = new PerspectiveCamera();
 
-        // Use a Pane as the scene root so we can overlay 2D controls (ComboBox)
-        // on top of the 3D content without the controls being affected by
-        // the 3D group's transforms (rotation/translation).
-        Pane root = new Pane();
-        root.getChildren().add(spaceUI);
+        // Use a Pane as the scene root so we can overlay 2D controls
+        Pane ui = new Pane();
+        ui.getChildren().add(model);
 
 		ComboBox<String> satellitePicker = new ComboBox<>(satelliteNames);
 		satellitePicker.setLayoutX(20);
 		satellitePicker.setLayoutY(20);
 
-		// Add the picker to the UI root (not the 3D group) so it is visible
-		root.getChildren().add(satellitePicker);
+		// Add the picker to the UI
+		ui.getChildren().add(satellitePicker);
 
-        //Sets up the scene to be displayed with the root and camera
-        Scene space = new Scene(root, WIDTH, HEIGHT);
-        space.setCamera(telescope);
+        // Sets up the scene to be displayed with the ui and camera
+        Scene scene = new Scene(ui, WIDTH, HEIGHT, true, SceneAntialiasing.BALANCED);
+        scene.setCamera(camera);
 
-        //Key press event handler to zoom in and out and rotate the group
-        arg0.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
-            switch (event.getCode()) {
-                //zoom out
-                case W:
-                    spaceUI.translateZProperty().set(spaceUI.getTranslateZ() + 50);
-                    break;
-                //zoom in
-                case S:
-                    spaceUI.translateZProperty().set(spaceUI.getTranslateZ() - 50);
-                    break;
-                //Rotate left    
-                case A:
-                    spaceUI.setRotate(spaceUI.getRotate() + 20);
-                    break;
-                //Rotate right    
-                case D:
-                    spaceUI.setRotate(spaceUI.getRotate() - 20);
-                    break;
-            }
-        });
+		scene.setOnMousePressed(event -> {
+			mouseStartX = event.getSceneX();
+			modelStartX = model.getRotate();
+		});
+
+		scene.setOnMouseDragged(event -> {
+			model.setRotate(modelStartX - (event.getSceneX() - mouseStartX)  * 0.4);
+		});
 
         //Instantiates the scene
-        arg0.setTitle("SatellaGlobe");
-        arg0.setScene(space);
-        arg0.show();
+        stage.setTitle("SatellaGlobe");
+        stage.setScene(scene);
+        stage.show();
     }
     //Runs the application
     public static void main(String[] args) {
         launch();
     }
-    
 }
