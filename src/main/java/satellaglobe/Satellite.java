@@ -48,6 +48,8 @@ public class Satellite extends Sphere {
         Label satLocation = new Label("\nX-Location: " + xTranslate + "\n" + 
             "Y-Location: " + yTranslate + "\n" + "Z-Location: " + zTranslate);
         satInfo.getContent().addAll(satName, satLocation);
+		satName.setTextFill(Color.WHITE);
+		satLocation.setTextFill(Color.WHITE);
 
         //Color value to apply to satellites
         PhongMaterial hoverColor = new PhongMaterial();
