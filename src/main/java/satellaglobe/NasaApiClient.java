@@ -27,4 +27,20 @@ public class NasaApiClient {
 			"Id"
 		);
 	}
+
+	/**
+	 * Get a hashmap of Ids for names from the NASA API.
+	 * @return A hashmap of satellite names to their IDs
+	 */
+	public static final java.util.Map<String, String> GetSatelliteNameIdMap() {
+		List<String> names = GetAllSatelliteNames();
+		List<String> ids = GetAllSatelliteIds();
+		
+		java.util.Map<String, String> nameIdMap = new java.util.HashMap<>();
+		for (int i = 0; i < names.size() && i < ids.size(); i++) {
+			nameIdMap.put(names.get(i), ids.get(i));
+		}
+
+		return nameIdMap;
+	}
 }
