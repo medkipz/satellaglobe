@@ -3,14 +3,16 @@ package satellaglobe;
 import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.image.Image;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.control.ComboBox;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.control.ToolBar;
+import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.stage.*;
 import javafx.collections.*;
+import javafx.geometry.Orientation;
 
 /**
  * SpaceApp Application creates 3D model for satellite representation 
@@ -35,9 +37,6 @@ public class SpaceApp extends Application {
 		)
 	);
 
-    //Stops alert related to the switch statment
-    @SuppressWarnings("incomplete-switch")
-
     //Main method override for java applications
     @Override
     public void start(Stage stage) throws Exception {
@@ -49,38 +48,36 @@ public class SpaceApp extends Application {
         globeMaterial.setDiffuseMap(globeTexture);
         globe.setMaterial(globeMaterial);
 
-        //Makes group of 'Earth' and satallites to be instantiated
-        Group model = new Group();
-		model.setTranslateZ(-1000);
+		Camera camera = new PerspectiveCamera();
+
+        Group model = new Group(globe);
+		model.setRotationAxis(Rotate.Y_AXIS);
 		model.setTranslateX(WIDTH / 2);
 		model.setTranslateY(HEIGHT / 2);
-        model.getChildren().add(globe);
+		model.setTranslateZ(-1000);
 		
         //test satellites
         model.getChildren().add(new Satellite("s1", 50, 50, 50));
         model.getChildren().add(new Satellite("s2", -50, -50, -50));
-
-        //Makes the center of rotation for the group the y-axis
-        model.setRotationAxis(Rotate.Y_AXIS);
-
-        //Sets up a javafx perspective camera to allow for model translation by the user
-        Camera camera = new PerspectiveCamera();
+        
 
         // Use a Pane as the scene root so we can overlay 2D controls
-        Pane ui = new Pane();
-        ui.getChildren().add(model);
+       	SubScene view3d = new SubScene(model, WIDTH, HEIGHT, true, SceneAntialiasing.BALANCED);
+		view3d.setFill(Color.BLACK);
+		view3d.setCamera(camera);
+
+		BorderPane ui = new BorderPane();
+		ui.setCenter(view3d);
+		//view3d.setCamera(camera);
 
 		ComboBox<String> satellitePicker = new ComboBox<>(satelliteNames);
-		satellitePicker.setLayoutX(20);
-		satellitePicker.setLayoutY(20);
+		ToolBar toolBar = new ToolBar(satellitePicker);
+		toolBar.setOrientation(Orientation.VERTICAL);
+		ui.setLeft(toolBar);
+		ui.setPrefSize(HEIGHT, 128);
 
-		// Add the picker to the UI
-		ui.getChildren().add(satellitePicker);
-
-        // Sets up the scene to be displayed with the ui and camera
-        Scene scene = new Scene(ui, WIDTH, HEIGHT, true, SceneAntialiasing.BALANCED);
-        scene.setCamera(camera);
-
+		Scene scene = new Scene(ui);
+		
 		scene.setOnMousePressed(event -> {
 			mouseStartX = event.getSceneX();
 			modelStartX = model.getRotate();
@@ -89,7 +86,7 @@ public class SpaceApp extends Application {
 		scene.setOnMouseDragged(event -> {
 			model.setRotate(modelStartX - (event.getSceneX() - mouseStartX)  * 0.4);
 		});
-
+		
         //Instantiates the scene
         stage.setTitle("SatellaGlobe");
         stage.setScene(scene);

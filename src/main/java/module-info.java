@@ -3,7 +3,7 @@ module satellaglobe {
     requires javafx.fxml;
     requires java.net.http;
 	requires java.sql;
-    requires javafx.graphics;
+    requires transitive javafx.graphics;
 
     opens satellaglobe to javafx.fxml;
     exports satellaglobe;
