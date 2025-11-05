@@ -1,10 +1,9 @@
 package satellaglobe;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
+import java.text.*;
 import java.util.*;
+
+import jakarta.xml.bind.*;
 
 /**
  * Utility class for interacting with the NASA API.
@@ -56,6 +55,18 @@ public class NasaApiClient {
 		}
 
 		return allNames;
+	}
+
+	public static final List<Observatory> GetAllObservatories() throws JAXBException {
+		String xmlData = HttpRequester.getUrlData("https://sscweb.gsfc.nasa.gov/WS/sscr/2/observatories");
+		JAXBContext jaxbContext = JAXBContext.newInstance(ObservatoryResponse.class);
+		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+		java.io.StringReader reader = new java.io.StringReader(xmlData);
+		ObservatoryResponse response = (ObservatoryResponse) jaxbUnmarshaller.unmarshal(reader);
+		if (response != null && response.getObservatory() != null) {
+			return response.getObservatory();
+		}
+		return new ArrayList<>();
 	}
 
 	/**

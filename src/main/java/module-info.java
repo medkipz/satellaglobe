@@ -4,7 +4,7 @@ module satellaglobe {
     requires java.net.http;
 	requires java.sql;
     requires transitive javafx.graphics;
-
-    opens satellaglobe to javafx.fxml;
+    requires jakarta.xml.bind;
+    opens satellaglobe to javafx.fxml, jakarta.xml.bind;
     exports satellaglobe;
 }

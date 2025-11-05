@@ -109,6 +109,8 @@ public class SpaceApp extends Application {
 		scene.setOnMouseDragged(event -> {
 			model.setRotate(modelStartX - (event.getSceneX() - mouseStartX)  * 0.4);
 		});
+
+		System.out.println(NasaApiClient.GetAllObservatories());
 		
         //Instantiates the scene
         stage.setTitle("SatellaGlobe");
