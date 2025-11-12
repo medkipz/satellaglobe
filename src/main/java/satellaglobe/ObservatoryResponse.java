@@ -2,23 +2,19 @@ package satellaglobe;
 
 import java.util.List;
 
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
-import jakarta.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.*;
 
 @XmlRootElement(name = "ObservatoryResponse", namespace = "http://sscweb.gsfc.nasa.gov/schema")
-@XmlType(name = "ObservatoryResponse")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class ObservatoryResponse {
     @XmlElement(name = "Observatory", namespace = "http://sscweb.gsfc.nasa.gov/schema")
-    private List<Observatory> Observatory;
-
-    public ObservatoryResponse() {}
-
-    public List<Observatory> getObservatory() {
-        return Observatory;
-    }
+    private List<Observatory> observatory;
 
     public void setObservatory(List<Observatory> observatory) {
-        this.Observatory = observatory;
+        this.observatory = observatory;
+    }
+
+    public List<Observatory> getObservatory() {
+        return this.observatory;
     }
 }

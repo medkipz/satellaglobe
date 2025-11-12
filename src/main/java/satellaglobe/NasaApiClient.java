@@ -62,7 +62,7 @@ public class NasaApiClient {
 		JAXBContext jaxbContext = JAXBContext.newInstance(ObservatoryResponse.class);
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 		java.io.StringReader reader = new java.io.StringReader(xmlData);
-		ObservatoryResponse response = (ObservatoryResponse) jaxbUnmarshaller.unmarshal(reader);
+		ObservatoryResponse response = (ObservatoryResponse)jaxbUnmarshaller.unmarshal(reader);
 		if (response != null && response.getObservatory() != null) {
 			return response.getObservatory();
 		}
