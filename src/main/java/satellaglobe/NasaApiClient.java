@@ -10,15 +10,6 @@ import jakarta.xml.bind.*;
  */
 public class NasaApiClient {
 	/**
-	 * Get a Map of all satellites with their details from the NASA API.
-	 * @return Map of all satellites with, Name, Id, Resolution, StartTime, EndTime
-	 */
-	public static final Map<String, Object> GetAllSatellites() {
-		String xmlData = HttpRequester.getUrlData("https://sscweb.gsfc.nasa.gov/WS/sscr/2/observatories");
-		Map<String, Object> xmlMap = XMLUtils.convertXmlToMap(xmlData);
-		return xmlMap;
-	}
-	/**
 	 * Get a list of all satellite names from the NASA API.
 	 * @return A list of satellite names
 	 */
