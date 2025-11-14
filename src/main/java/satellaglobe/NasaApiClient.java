@@ -56,8 +56,24 @@ public class NasaApiClient {
 		ObservatoryResponse response = (ObservatoryResponse)jaxbUnmarshaller.unmarshal(reader);
 		if (response != null && response.getObservatory() != null) {
 			return response.getObservatory();
+		} else {
+			return new ArrayList<>();
 		}
-		return new ArrayList<>();
+	}
+
+	public static final SatelliteResponse getSatelliteResponse(String satelliteId) throws JAXBException {
+		Date startDate = new Date();
+		Date endDate  = new Date(startDate.getTime() + 3600 * 1000);
+
+		String startTime = (new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")).format(startDate);
+		String endTime = (new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")).format(endDate);
+
+		String xmlData = HttpRequester.getUrlData("https://sscweb.gsfc.nasa.gov/WS/sscr/2/locations/" + satelliteId + "/" + startTime + "," + endTime + "/geo");
+		JAXBContext jaxbContext = JAXBContext.newInstance(SatelliteResponse.class);
+		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+		java.io.StringReader reader = new java.io.StringReader(xmlData);
+		SatelliteResponse result = (SatelliteResponse)jaxbUnmarshaller.unmarshal(reader);
+		return result;
 	}
 
 	/**
