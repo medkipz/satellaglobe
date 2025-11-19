@@ -48,32 +48,43 @@ public class NasaApiClient {
 		return allNames;
 	}
 
-	public static final List<Observatory> GetAllObservatories() throws JAXBException {
-		String xmlData = HttpRequester.getUrlData("https://sscweb.gsfc.nasa.gov/WS/sscr/2/observatories");
-		JAXBContext jaxbContext = JAXBContext.newInstance(ObservatoryResponse.class);
-		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-		java.io.StringReader reader = new java.io.StringReader(xmlData);
-		ObservatoryResponse response = (ObservatoryResponse)jaxbUnmarshaller.unmarshal(reader);
-		if (response != null && response.getObservatory() != null) {
-			return response.getObservatory();
-		} else {
+	public static final List<Observatory> GetAllObservatories() {
+		try {
+			String xmlData = HttpRequester.getUrlData("https://sscweb.gsfc.nasa.gov/WS/sscr/2/observatories");
+			JAXBContext jaxbContext = JAXBContext.newInstance(ObservatoryResponse.class);
+			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+			java.io.StringReader reader = new java.io.StringReader(xmlData);
+			ObservatoryResponse response = (ObservatoryResponse) jaxbUnmarshaller.unmarshal(reader);
+			if (response != null && response.getObservatory() != null) {
+				return response.getObservatory();
+			} else {
+				return new ArrayList<>();
+			}
+		} catch (JAXBException e) {
+			System.out.println("Encountered JAXBException: " + e);
 			return new ArrayList<>();
 		}
 	}
 
-	public static final SatelliteResponse getSatelliteResponse(String satelliteId) throws JAXBException {
+	public static final SatelliteResponse getSatelliteResponse(String satelliteId) {
 		Date startDate = new Date();
 		Date endDate  = new Date(startDate.getTime() + 3600 * 1000);
 
 		String startTime = (new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")).format(startDate);
 		String endTime = (new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")).format(endDate);
 
-		String xmlData = HttpRequester.getUrlData("https://sscweb.gsfc.nasa.gov/WS/sscr/2/locations/" + satelliteId + "/" + startTime + "," + endTime + "/geo");
-		JAXBContext jaxbContext = JAXBContext.newInstance(SatelliteResponse.class);
-		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-		java.io.StringReader reader = new java.io.StringReader(xmlData);
-		SatelliteResponse result = (SatelliteResponse)jaxbUnmarshaller.unmarshal(reader);
-		return result;
+		try {
+			String xmlData = HttpRequester.getUrlData("https://sscweb.gsfc.nasa.gov/WS/sscr/2/locations/" + satelliteId + "/" + startTime + "," + endTime + "/geo");
+			JAXBContext jaxbContext = JAXBContext.newInstance(SatelliteResponse.class);
+			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+			java.io.StringReader reader = new java.io.StringReader(xmlData);
+			SatelliteResponse result = (SatelliteResponse)jaxbUnmarshaller.unmarshal(reader);
+
+			return result;
+		} catch (JAXBException e) {
+			System.out.println("Encountered JAXBException " + e);
+			return new SatelliteResponse();
+		}
 	}
 
 	/**
@@ -113,24 +124,17 @@ public class NasaApiClient {
 		return new double[] {0.0, 0.0}; // Placeholder implementation
 	}
 
-	 /**
-	 * Get satellite details by its ID from the NASA API using current time.
-	 * @param satelliteId The ID of the satellite
-	 * @return A map of satellite details
-	 */
-	public static final double[] GetSatelliteCoordinates(String satelliteId) {
-		Date startDate = new Date();
-		Date endDate  = new Date(startDate.getTime() + 3600 * 1000);
+	public static final List<List<Double>> getSatelliteLatLonMag(String satelliteId) {
+		SatelliteResponse response = NasaApiClient.getSatelliteResponse(satelliteId);
+		SatelliteResult satelliteData = response.getSatelliteData();
+		SatelliteData data = satelliteData.getData();
+		SatelliteCoordinates coordinates = data.getCoordinates();
 
-		String startTime = (new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")).format(startDate);
-		String endTime = (new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")).format(endDate);
+		List<List<Double>> result = new ArrayList<List<Double>>();
+		result.add(coordinates.getLatitude());
+		result.add(coordinates.getLongitude());
+		result.add(data.getAltitude());
 
-		String xmlResponse = HttpRequester.getUrlData("https://sscweb.gsfc.nasa.gov/WS/sscr/2/locations/" + satelliteId + "/" + startTime + "," + endTime + "/geo");
-		
-		return new double[] {
-			Double.parseDouble(XMLUtils.parseTags(xmlResponse, "X").get(0)),
-			Double.parseDouble(XMLUtils.parseTags(xmlResponse, "Y").get(0)),
-			Double.parseDouble(XMLUtils.parseTags(xmlResponse, "Z").get(0))
-		};
+		return result;
 	}
 }

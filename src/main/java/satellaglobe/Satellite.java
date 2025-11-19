@@ -3,6 +3,7 @@ package satellaglobe;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Sphere;
@@ -15,72 +16,34 @@ import javafx.stage.Popup;
 public class Satellite extends Sphere {
     private String name;
 
+	private static final double RADIAN_CONVERSION = Math.PI / 180.0;
+
 	private double latitude;
 	private double longitude;
 	private double magnitude;
 
 	private SatelliteInfoPopup satelliteInfo;
 
-    /*
+	 /**
      * Satellite Constructor 
      * 
      * @param name for name of satellite
-     * @param xTranslate for javafx x-translation
-     * @param yTranslate for javafx y-translation
-     * @param zTranslate for javafx z-translation
-    public Satellite(String name, double xTranslate, double yTranslate, double zTranslate, double asjfkla) {
-        
-        //Instantiates each satellite with a size of 20
-        super(20);
-        
-        this.name = name;
-
-        this.xTranslate = xTranslate;
-        this.yTranslate = yTranslate;
-        this.zTranslate = zTranslate;
-
-        super.translateXProperty().set(xTranslate);
-        super.translateYProperty().set(yTranslate);
-        super.translateZProperty().set(zTranslate);
-
-        //Popup window to display relevant satellite information
-        Popup satInfo = new Popup();
-        Label satName = new Label("Name: " + this.name);
-        Label satLocation = new Label("\nX-Location: " + xTranslate + "\n" +  "Y-Location: " + yTranslate + "\n" + "Z-Location: " + zTranslate);
-        satInfo.getContent().addAll(satName, satLocation);
-		satName.setTextFill(Color.WHITE);
-		satLocation.setTextFill(Color.WHITE);
-
-        //Color value to apply to satellites
-        PhongMaterial hoverColor = new PhongMaterial();
-        hoverColor.setDiffuseColor(Color.ORANGE);
-
-        //Changes satellite color to orange and displays the popup when hovered over
-        this.addEventHandler(MouseEvent.MOUSE_ENTERED, unused -> {
-            this.setMaterial(hoverColor);
-            Point2D screenPos = this.localToScreen(0, 0);
-            satInfo.show(this, screenPos.getX() + 10, screenPos.getY() + 10);
-        });
-
-        //Removes coloring and popup once mouse is moved away from the satellite
-        this.addEventHandler(MouseEvent.MOUSE_EXITED, unused -> {
-            this.setMaterial(null);
-            satInfo.hide();
-        });
-    }
-	*/
-
+     * @param latitude for latitudinal position of satellite
+     * @param longitude for longitudinal position of satellite
+     * @param magnitude for (not simulated) distance from earth
+	 */
 	public Satellite(String name, double latitude, double longitude, double magnitude) {
 		// Instantiates each satellite with a size of 20
 		super(20);
 
-		this.name = name;
-		this.latitude = latitude;
-		this.longitude = longitude;
-		this.magnitude = magnitude;
-
 		// Popup window to display relevant satellite information on hover
 		this.satelliteInfo = new SatelliteInfoPopup();
+
+		//
+		this.setName(name);
+		this.setLatitude(latitude);
+		this.setLongitude(longitude);
+		this.setMagnitude(magnitude);
 
 		// Color value to apply to satellites on hover
         PhongMaterial hoverColor = new PhongMaterial();
@@ -112,6 +75,7 @@ public class Satellite extends Sphere {
 	public void setLatitude(double latitude) {
 		this.latitude = latitude;
 		this.satelliteInfo.setLatitude(latitude);
+		this.updateCartesianCoordinates();
 	}
 
 	public double getLatitude() {
@@ -121,6 +85,7 @@ public class Satellite extends Sphere {
 	public void setLongitude(double longitude) {
 		this.longitude = longitude;
 		this.satelliteInfo.setLongitude(longitude);
+		this.updateCartesianCoordinates();
 	}
 
 	public double getLongitude() {
@@ -130,10 +95,29 @@ public class Satellite extends Sphere {
 	public void setMagnitude(double magnitude) {
 		this.magnitude = magnitude;
 		this.satelliteInfo.setMagnitude(magnitude);
+		this.updateCartesianCoordinates();
 	}
 
 	public double getMagnitude() {
 		return magnitude;
+	}
+
+	/**
+	 * Private method for updating the position of satellite when certain setters are called.
+	 * 
+	 * Technically not cartesian coordinates because Descartes was STUPID and thought that the Z axis was Yaw
+	 */
+	private void updateCartesianCoordinates() {
+		this.setTranslateX(
+			150 * Math.cos(this.latitude * RADIAN_CONVERSION) * Math.cos(this.longitude * RADIAN_CONVERSION)
+		);
+		this.setTranslateZ(
+			150 * Math.cos(this.latitude * RADIAN_CONVERSION) * Math.sin(this.longitude * RADIAN_CONVERSION)
+		);
+		// This has to be multiplied by negative one  or else the 
+		this.setTranslateY(
+			-150 * Math.sin(this.latitude * RADIAN_CONVERSION)
+		);
 	}
 	
 	/**
@@ -147,6 +131,7 @@ public class Satellite extends Sphere {
 
 		public SatelliteInfoPopup() {
 			super();
+
 			this.name = new Label();
 			this.latitude = new Label();
 			this.longitude = new Label();
@@ -157,7 +142,10 @@ public class Satellite extends Sphere {
 			this.longitude.setTextFill(Color.WHITE);
 			this.magnitude.setTextFill(Color.WHITE);
 
-			this.getContent().addAll(this.name, this.latitude, this.longitude, this.magnitude);
+			VBox popupContent = new VBox(1);
+			popupContent.getChildren().addAll(this.name, this.latitude, this.longitude, this.magnitude);
+
+			this.getContent().add(popupContent);
 		}
 
 		public void setName(String name) {

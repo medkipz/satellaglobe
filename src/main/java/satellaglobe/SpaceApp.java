@@ -45,6 +45,8 @@ public class SpaceApp extends Application {
         PhongMaterial globeMaterial = new PhongMaterial();
         globeMaterial.setDiffuseMap(globeTexture);
         globe.setMaterial(globeMaterial);
+		globe.setRotationAxis(Rotate.Y_AXIS);
+		globe.setRotate(-90.0);
 
 		Camera camera = new PerspectiveCamera();
 
@@ -67,30 +69,28 @@ public class SpaceApp extends Application {
 		satellitePicker.setOnAction(unused -> {
 			String selected = satellitePicker.getValue();
 			String selectedId = satelliteIdHashMap.get(selected);
-			double[] coordinates =  NasaApiClient.GetSatelliteCoordinates(selectedId);
-
-			double magnitude = Math.sqrt(
-				coordinates[0] * coordinates[0] +
-				coordinates[1] * coordinates[1] +
-				coordinates[2] * coordinates[2]
-			);
-
-			double[] unitCoordinates = new double[] {
-				coordinates[0] / magnitude,
-				coordinates[1] / magnitude,
-				coordinates[2] / magnitude
-			};
+			List<List<Double>> coordinates =  NasaApiClient.getSatelliteLatLonMag(selectedId);
 
 			if (currentSatellite != null) {
 				model.getChildren().remove(currentSatellite);
 			}
 
+			/*
 			currentSatellite = new Satellite(
 				selected,
-				unitCoordinates[0] * 100,
-				unitCoordinates[1] * 100,
-				unitCoordinates[2] * 100
+				coordinates.get(0).get(0),
+				coordinates.get(1).get(0),
+				coordinates.get(2).get(0)
 			);
+			*/
+
+			currentSatellite = new Satellite(
+				selected,
+				90,
+				0,
+				0
+			);
+
 			model.getChildren().add(currentSatellite);
 		});
 
