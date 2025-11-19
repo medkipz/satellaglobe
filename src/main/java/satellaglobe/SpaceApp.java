@@ -39,9 +39,11 @@ public class SpaceApp extends Application {
 		final ObservableList<String> satelliteNames = FXCollections.observableList(NasaApiClient.GetAllActiveSatelliteNames());
 		final Map<String, String> satelliteIdHashMap = NasaApiClient.GetSatelliteNameIdMap();
 
+		final Image backgroundStars = new Image(getClass().getResource("/satellaglobe/backgroundStars.png").toExternalForm());
+		final Image globeTexture = new Image(getClass().getResource("/satellaglobe/globeTexture.jpg").toExternalForm());
+
         //3D model to represent Earth and center it in the scene
         Sphere globe = new Sphere(50);
-        Image globeTexture = new Image(getClass().getResource("/satellaglobe/globeTexture.jpg").toExternalForm());
         PhongMaterial globeMaterial = new PhongMaterial();
         globeMaterial.setDiffuseMap(globeTexture);
         globe.setMaterial(globeMaterial);
@@ -59,6 +61,8 @@ public class SpaceApp extends Application {
         // Use a Pane as the scene root so we can overlay 2D controls
        	SubScene view3d = new SubScene(model, WIDTH, HEIGHT, true, SceneAntialiasing.BALANCED);
 		view3d.setFill(Color.BLACK);
+		view3d.setFill(new javafx.scene.paint.ImagePattern(backgroundStars));
+
 		view3d.setCamera(camera);
 
 		BorderPane ui = new BorderPane();
@@ -75,20 +79,11 @@ public class SpaceApp extends Application {
 				model.getChildren().remove(currentSatellite);
 			}
 
-			/*
 			currentSatellite = new Satellite(
 				selected,
 				coordinates.get(0).get(0),
 				coordinates.get(1).get(0),
 				coordinates.get(2).get(0)
-			);
-			*/
-
-			currentSatellite = new Satellite(
-				selected,
-				90,
-				0,
-				0
 			);
 
 			model.getChildren().add(currentSatellite);
@@ -108,6 +103,8 @@ public class SpaceApp extends Application {
 
 		scene.setOnMouseDragged(event -> {
 			model.setRotate(modelStartX - (event.getSceneX() - mouseStartX)  * 0.4);
+			double bgOffsetX = - (model.getRotate() % 360) / 360.0;
+			view3d.setFill(new javafx.scene.paint.ImagePattern(backgroundStars, bgOffsetX, 0, 1, 1, true));
 		});
 
 		System.out.println(NasaApiClient.GetAllObservatories());
