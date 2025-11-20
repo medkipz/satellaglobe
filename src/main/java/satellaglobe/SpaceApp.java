@@ -29,9 +29,7 @@ public class SpaceApp extends Application {
 
     //Scene size variables
     private static final int HEIGHT = 900;
-    private static final int WIDTH = 1600;
-
-	private Satellite currentSatellite;
+    private static final int WIDTH = 1600;	
 
 	private double mouseStartX;
 	private double modelStartX;
@@ -118,8 +116,6 @@ public class SpaceApp extends Application {
 		coordinatesSlider.valueProperty().addListener((objects, oldValue, newValue) -> {
 			double indexProportion = newValue.doubleValue();
 
-			System.out.println(indexProportion);
-
 			for (Node node : satellites.getChildren()) {
 				if (node instanceof Satellite satellite) {
 					int index = (int) Math.round(indexProportion * (satellite.getLatitudes().size() - 1));
@@ -146,8 +142,6 @@ public class SpaceApp extends Application {
 			double bgOffsetX = -(rotate.getAngle() % 360) / 360.0;
 			view3d.setFill(new javafx.scene.paint.ImagePattern(backgroundStars, bgOffsetX, 0, 1, 1, true));
 		});
-
-		System.out.println(NasaApiClient.GetAllObservatories());
 		
         //Instantiates the scene
         stage.setTitle("SatellaGlobe");

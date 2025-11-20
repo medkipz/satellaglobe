@@ -14,10 +14,13 @@ public class NasaApiClient {
 	 * @return A list of satellite names
 	 */
 	public static final List<String> GetAllSatelliteNames() {
-		return XMLUtils.parseTags(
-			HttpRequester.getUrlData("https://sscweb.gsfc.nasa.gov/WS/sscr/2/observatories"),
-			"Name"
-		);
+		ArrayList<String> names = new ArrayList<>();
+
+		for (Observatory observatory : GetAllObservatories()) {
+			names.add(observatory.getName());
+		}
+		
+		return names;
 	}
 
 	/**
@@ -27,31 +30,28 @@ public class NasaApiClient {
 	public static final List<String> GetAllActiveSatelliteNames() {
 		Date currentDate = new Date();
 
-		List<String> allNames = XMLUtils.parseTags(
-			HttpRequester.getUrlData("https://sscweb.gsfc.nasa.gov/WS/sscr/2/observatories"),
-			"Name"
-		);
-
-		List<String> endTimes = XMLUtils.parseTags(
-			HttpRequester.getUrlData("https://sscweb.gsfc.nasa.gov/WS/sscr/2/observatories"),
-			"EndTime"
-		);
+		List<Observatory> observatories = GetAllObservatories();
+		List<String> names = new ArrayList<>();
 
 		// Index in reverse so removals don't mess up order
-		for (int index = endTimes.size() - 1; index > 0 ; index--) {
+		for (int index = observatories.size() - 1; index > 0 ; index--) {
 			DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 			try {
-				Date endDate = df.parse(endTimes.get(index));
+				Date endDate = df.parse(observatories.get(index).getEndTime());
 
 				if (endDate.before(currentDate)) {
-					allNames.remove(index);
+					observatories.remove(index);
 				}
 			} catch (ParseException e) {
-				allNames.remove(index);
+				observatories.remove(index);
 			}
 		}
 
-		return allNames;
+		for (Observatory observatory : observatories) {
+			names.add(observatory.getName());
+		}
+
+		return names;
 	}
 
 	public static final List<Observatory> GetAllObservatories() {
@@ -98,10 +98,13 @@ public class NasaApiClient {
 	 * @return A list of satellite IDs
 	 */
 	public static final List<String> GetAllSatelliteIds() {
-		return XMLUtils.parseTags(
-			HttpRequester.getUrlData("https://sscweb.gsfc.nasa.gov/WS/sscr/2/observatories"),
-			"Id"
-		);
+		ArrayList<String> ids = new ArrayList<>();
+
+		for (Observatory observatory : GetAllObservatories()) {
+			ids.add(observatory.getId());
+		}
+		
+		return ids;
 	}
 
 	/**
