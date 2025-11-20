@@ -125,6 +125,10 @@ public class Satellite extends Sphere {
 
 	public void setListIndex(int listIndex) {
 		this.listIndex.set(listIndex);
+
+		this.satelliteInfo.setLatitude(this.getLatitudes().get(this.getListIndex()));
+		this.satelliteInfo.setLongitude(this.getLongitudes().get(this.getListIndex()));
+		this.satelliteInfo.setMagnitude(this.getMagnitudes().get(this.getListIndex()));
 	}
 	public int getListIndex() {
 		return this.listIndex.get();
