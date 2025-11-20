@@ -35,7 +35,7 @@ public class SpaceApp extends Application {
 
     //Main method override for java applications
     @Override
-    public void start(Stage stage) throws Exception {
+    public void start(Stage stage) {
 		final ObservableList<String> satelliteNames = FXCollections.observableList(NasaApiClient.GetAllActiveSatelliteNames());
 		final Map<String, String> satelliteIdHashMap = NasaApiClient.GetSatelliteNameIdMap();
 

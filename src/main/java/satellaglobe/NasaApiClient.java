@@ -24,7 +24,7 @@ public class NasaApiClient {
 	 * Get a list of all satellite names from the NASA API.
 	 * @return A list of satellite names that are currently active
 	 */
-	public static final List<String> GetAllActiveSatelliteNames() throws ParseException {
+	public static final List<String> GetAllActiveSatelliteNames() {
 		Date currentDate = new Date();
 
 		List<String> allNames = XMLUtils.parseTags(
@@ -37,11 +37,17 @@ public class NasaApiClient {
 			"EndTime"
 		);
 
-		for (int i = endTimes.size() - 1; i > 0 ; i--) {
+		// Index in reverse so removals don't mess up order
+		for (int index = endTimes.size() - 1; index > 0 ; index--) {
 			DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-			Date endDate = df.parse(endTimes.get(i));
-			if (endDate.before(currentDate)) {
-				allNames.remove(i);
+			try {
+				Date endDate = df.parse(endTimes.get(index));
+
+				if (endDate.before(currentDate)) {
+					allNames.remove(index);
+				}
+			} catch (ParseException e) {
+				allNames.remove(index);
 			}
 		}
 
