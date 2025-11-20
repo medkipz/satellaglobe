@@ -22,7 +22,6 @@ import javafx.geometry.Orientation;
  * 
  * @author Yingling, Rippey
  * 	
- * @version 1.0
  */
 public class SpaceApp extends Application {
 
