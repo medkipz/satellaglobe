@@ -15,7 +15,6 @@ import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.stage.*;
 import javafx.collections.*;
-import javafx.event.EventType;
 import javafx.geometry.Orientation;
 
 /**
