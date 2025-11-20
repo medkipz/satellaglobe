@@ -1,11 +1,13 @@
 package satellaglobe;
 
 import java.util.*;
+
+import org.controlsfx.control.CheckComboBox;
 import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.control.ComboBox;
+import javafx.scene.control.Slider;
 import javafx.scene.control.ToolBar;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
@@ -13,6 +15,7 @@ import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.stage.*;
 import javafx.collections.*;
+import javafx.event.EventType;
 import javafx.geometry.Orientation;
 
 /**
@@ -42,68 +45,105 @@ public class SpaceApp extends Application {
 		final Image backgroundStars = new Image(getClass().getResource("/satellaglobe/backgroundStars.png").toExternalForm());
 		final Image globeTexture = new Image(getClass().getResource("/satellaglobe/globeTexture.jpg").toExternalForm());
 
-        //3D model to represent Earth and center it in the scene
-        Sphere globe = new Sphere(50);
+        // 3D model to represent Earth and center it in the scene
+        Sphere globe = new Sphere();
         PhongMaterial globeMaterial = new PhongMaterial();
+		Camera camera = new ParallelCamera();
+		Group satellites = new Group();
+        Group model = new Group(globe, satellites);
+		Group pivot = new Group(model);
+		SubScene view3d = new SubScene(pivot, WIDTH, HEIGHT, true, SceneAntialiasing.BALANCED);
+		BorderPane ui = new BorderPane();
+		CheckComboBox<String> satellitePicker = new CheckComboBox<>(satelliteNames);
+		Scene scene = new Scene(ui);
+		Slider coordinatesSlider = new Slider();
+		ToolBar toolBar = new ToolBar();
+		Rotate rotate = new Rotate(0, Rotate.Y_AXIS);
+		
         globeMaterial.setDiffuseMap(globeTexture);
+		globe.radiusProperty().bind(view3d.heightProperty().divide(5));
         globe.setMaterial(globeMaterial);
 		globe.setRotationAxis(Rotate.Y_AXIS);
 		globe.setRotate(-90.0);
 
-		Camera camera = new PerspectiveCamera();
+		rotate.setPivotX(0);
+		rotate.setPivotY(0);
+		rotate.setPivotZ(0);
 
-        Group model = new Group(globe);
+		model.getTransforms().add(rotate);
 		model.setRotationAxis(Rotate.Y_AXIS);
-		model.setTranslateX(WIDTH / 2);
-		model.setTranslateY(HEIGHT / 2);
-		model.setTranslateZ(-1000);
+		model.setTranslateZ(-1);
 
-        // Use a Pane as the scene root so we can overlay 2D controls
-       	SubScene view3d = new SubScene(model, WIDTH, HEIGHT, true, SceneAntialiasing.BALANCED);
+		pivot.translateXProperty().bind(view3d.widthProperty().divide(2));
+		pivot.translateYProperty().bind(view3d.heightProperty().divide(2));
+       	
 		view3d.setFill(Color.BLACK);
 		view3d.setFill(new javafx.scene.paint.ImagePattern(backgroundStars));
-
 		view3d.setCamera(camera);
 
-		BorderPane ui = new BorderPane();
+		satellitePicker.setPrefWidth(256);
+		satellitePicker.setMaxWidth(256);
+		satellitePicker.setMinWidth(256);
+
+		coordinatesSlider.setMin(0);
+		coordinatesSlider.setMax(1);
+		coordinatesSlider.setValue(0);
+
 		ui.setCenter(view3d);
 
-		ComboBox<String> satellitePicker = new ComboBox<>(satelliteNames);
-		satellitePicker.setPromptText("Select the satellite you wish to view.");
-		satellitePicker.setOnAction(unused -> {
-			String selected = satellitePicker.getValue();
-			String selectedId = satelliteIdHashMap.get(selected);
-			List<List<Double>> coordinates =  NasaApiClient.getSatelliteLatLonMag(selectedId);
+		toolBar.getItems().addAll(satellitePicker, coordinatesSlider);
 
-			if (currentSatellite != null) {
-				model.getChildren().remove(currentSatellite);
+
+		satellitePicker.getCheckModel().getCheckedItems().addListener((ListChangeListener<String>) c -> {
+			satellites.getChildren().removeIf(n -> n instanceof Satellite);
+
+			for (String name : satellitePicker.getCheckModel().getCheckedItems()) {
+				String id = satelliteIdHashMap.get(name);
+				List<List<Double>> coordinates = NasaApiClient.getSatelliteLatLonMag(id);
+
+				Satellite satellite = new Satellite(
+					name,
+					coordinates.get(0),
+					coordinates.get(1),
+					coordinates.get(2),
+					(int) Math.round(coordinatesSlider.getValue() * (coordinates.get(0).size() - 1))
+				);
+
+				satellite.radiusProperty().bind(view3d.heightProperty().divide(25));
+
+				satellites.getChildren().add(satellite);
 			}
-
-			currentSatellite = new Satellite(
-				selected,
-				coordinates.get(0).get(0),
-				coordinates.get(1).get(0),
-				coordinates.get(2).get(0)
-			);
-
-			model.getChildren().add(currentSatellite);
 		});
 
-		ToolBar toolBar = new ToolBar(satellitePicker);
+		coordinatesSlider.valueProperty().addListener((objects, oldValue, newValue) -> {
+			double indexProportion = newValue.doubleValue();
+
+			System.out.println(indexProportion);
+
+			for (Node node : satellites.getChildren()) {
+				if (node instanceof Satellite satellite) {
+					int index = (int) Math.round(indexProportion * (satellite.getLatitudes().size() - 1));
+					satellite.setListIndex(index);
+				}
+			}
+		});
+
 		toolBar.setOrientation(Orientation.VERTICAL);
 		ui.setLeft(toolBar);
 		ui.setPrefSize(HEIGHT, 128);
 
-		Scene scene = new Scene(ui);
+		view3d.widthProperty().bind(ui.widthProperty());
+		view3d.heightProperty().bind(ui.heightProperty());
 		
 		scene.setOnMousePressed(event -> {
 			mouseStartX = event.getSceneX();
-			modelStartX = model.getRotate();
+			modelStartX = rotate.getAngle();
 		});
 
 		scene.setOnMouseDragged(event -> {
-			model.setRotate(modelStartX - (event.getSceneX() - mouseStartX)  * 0.4);
-			double bgOffsetX = - (model.getRotate() % 360) / 360.0;
+			rotate.setAngle(modelStartX - (event.getSceneX() - mouseStartX) * 0.4);
+
+			double bgOffsetX = -(rotate.getAngle() % 360) / 360.0;
 			view3d.setFill(new javafx.scene.paint.ImagePattern(backgroundStars, bgOffsetX, 0, 1, 1, true));
 		});
 

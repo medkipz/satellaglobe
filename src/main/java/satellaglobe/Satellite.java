@@ -1,5 +1,8 @@
 package satellaglobe;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
@@ -8,6 +11,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Sphere;
 import javafx.stage.Popup;
+import java.util.*;
 
 /**
  * Satellite Class to handle 3D representations of live satellites around earth
@@ -18,9 +22,11 @@ public class Satellite extends Sphere {
 
 	private static final double RADIAN_CONVERSION = Math.PI / 180.0;
 
-	private double latitude;
-	private double longitude;
-	private double magnitude;
+	private List<Double> latitudes;
+	private List<Double> longitudes;
+	private List<Double> magnitudes;
+
+	private IntegerProperty listIndex;
 
 	private SatelliteInfoPopup satelliteInfo;
 
@@ -28,22 +34,22 @@ public class Satellite extends Sphere {
      * Satellite Constructor 
      * 
      * @param name for name of satellite
-     * @param latitude for latitudinal position of satellite
-     * @param longitude for longitudinal position of satellite
-     * @param magnitude for (not simulated) distance from earth
+     * @param latitudes for latitudinal position of satellite
+     * @param longitudes for longitudinal position of satellite
+     * @param magnitudes for (not simulated) distance from earth
 	 */
-	public Satellite(String name, double latitude, double longitude, double magnitude) {
-		// Instantiates each satellite with a size of 20
-		super(20);
+	public Satellite(String name, List<Double> latitudes, List<Double> longitudes, List<Double> magnitudes, int listIndex) {
+		super();
 
 		// Popup window to display relevant satellite information on hover
 		this.satelliteInfo = new SatelliteInfoPopup();
+		this.listIndex = new SimpleIntegerProperty();
 
-		//
 		this.setName(name);
-		this.setLatitude(latitude);
-		this.setLongitude(longitude);
-		this.setMagnitude(magnitude);
+		this.setLatitudes(latitudes);
+		this.setLongitudes(longitudes);
+		this.setMagnitudes(magnitudes);
+		this.setListIndex(listIndex);
 
 		// Color value to apply to satellites on hover
         PhongMaterial hoverColor = new PhongMaterial();
@@ -61,6 +67,20 @@ public class Satellite extends Sphere {
             this.setMaterial(null);
             this.satelliteInfo.hide();
         });
+
+		this.translateXProperty().bind(Bindings.createDoubleBinding(() -> {
+			return this.getRadius() * 8 * Math.cos(this.getLatitudes().get(this.getListIndex()) * RADIAN_CONVERSION)
+					* Math.cos(this.getLongitudes().get(this.getListIndex()) * RADIAN_CONVERSION);
+		}, this.radiusProperty(), this.listIndexProperty()));
+
+		this.translateZProperty().bind(Bindings.createDoubleBinding(() -> {
+			return this.getRadius() * 8 * Math.cos(this.getLatitudes().get(this.getListIndex()) * RADIAN_CONVERSION)
+					* Math.sin(this.getLongitudes().get(this.getListIndex()) * RADIAN_CONVERSION);
+		}, this.radiusProperty(), this.listIndexProperty()));
+
+		this.translateYProperty().bind(Bindings.createDoubleBinding(() -> {
+			return this.getRadius() * 8 * -Math.sin(this.getLatitudes().get(this.getListIndex()) * RADIAN_CONVERSION);
+		}, this.radiusProperty(), this.listIndexProperty()));
 	}
 
 	public void setName(String name) {
@@ -72,52 +92,42 @@ public class Satellite extends Sphere {
 		return name;
 	}
 
-	public void setLatitude(double latitude) {
-		this.latitude = latitude;
-		this.satelliteInfo.setLatitude(latitude);
-		this.updateCartesianCoordinates();
+	public void setLatitudes(List<Double> latitudes) {
+		this.latitudes = latitudes;
+		this.satelliteInfo.setLatitude(this.getLatitudes().get(this.getListIndex()));
 	}
 
-	public double getLatitude() {
-		return latitude;
+	public List<Double> getLatitudes() {
+		return this.latitudes;
 	}
 
-	public void setLongitude(double longitude) {
-		this.longitude = longitude;
-		this.satelliteInfo.setLongitude(longitude);
-		this.updateCartesianCoordinates();
+	public void setLongitudes(List<Double> longitudes) {
+		this.longitudes = longitudes;
+		this.satelliteInfo.setLongitude(this.getLongitudes().get(this.getListIndex()));
 	}
 
-	public double getLongitude() {
-		return longitude;
+	public List<Double> getLongitudes() {
+		return this.longitudes;
 	}
 
-	public void setMagnitude(double magnitude) {
-		this.magnitude = magnitude;
-		this.satelliteInfo.setMagnitude(magnitude);
-		this.updateCartesianCoordinates();
+	public void setMagnitudes(List<Double> magnitudes) {
+		this.magnitudes = magnitudes;
+		this.satelliteInfo.setMagnitude(this.getMagnitudes().get(this.getListIndex()));
 	}
 
-	public double getMagnitude() {
-		return magnitude;
+	public List<Double> getMagnitudes() {
+		return this.magnitudes;
 	}
 
-	/**
-	 * Private method for updating the position of satellite when certain setters are called.
-	 * 
-	 * Technically not cartesian coordinates because Descartes was STUPID and thought that the Z axis was Yaw
-	 */
-	private void updateCartesianCoordinates() {
-		this.setTranslateX(
-			150 * Math.cos(this.latitude * RADIAN_CONVERSION) * Math.cos(this.longitude * RADIAN_CONVERSION)
-		);
-		this.setTranslateZ(
-			150 * Math.cos(this.latitude * RADIAN_CONVERSION) * Math.sin(this.longitude * RADIAN_CONVERSION)
-		);
-		// This has to be multiplied by negative one  or else the 
-		this.setTranslateY(
-			-150 * Math.sin(this.latitude * RADIAN_CONVERSION)
-		);
+	public IntegerProperty listIndexProperty() {
+		return this.listIndex;
+	}
+
+	public void setListIndex(int listIndex) {
+		this.listIndex.set(listIndex);
+	}
+	public int getListIndex() {
+		return this.listIndex.get();
 	}
 	
 	/**
