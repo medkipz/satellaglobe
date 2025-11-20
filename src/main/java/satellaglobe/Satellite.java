@@ -142,7 +142,7 @@ public class Satellite extends Sphere {
 			this.longitude.setTextFill(Color.WHITE);
 			this.magnitude.setTextFill(Color.WHITE);
 
-			VBox popupContent = new VBox(0);
+			VBox popupContent = new VBox(1);
 
 			popupContent.getChildren().addAll(this.name, this.latitude, this.longitude, this.magnitude);
 			this.getContent().add(popupContent);
