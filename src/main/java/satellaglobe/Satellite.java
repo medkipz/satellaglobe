@@ -53,7 +53,7 @@ public class Satellite extends Sphere {
         this.addEventHandler(MouseEvent.MOUSE_ENTERED, unused -> {
             this.setMaterial(hoverColor);
             Point2D screenPos = this.localToScreen(0, 0);
-            this.satelliteInfo.show(this, screenPos.getX() + 10, screenPos.getY() + 10);
+            this.satelliteInfo.show(this, screenPos.getX() + 20, screenPos.getY() + 20);
         });
 
 		//Removes coloring and popup once mouse is moved away from the satellite
@@ -142,9 +142,9 @@ public class Satellite extends Sphere {
 			this.longitude.setTextFill(Color.WHITE);
 			this.magnitude.setTextFill(Color.WHITE);
 
-			VBox popupContent = new VBox(1);
-			popupContent.getChildren().addAll(this.name, this.latitude, this.longitude, this.magnitude);
+			VBox popupContent = new VBox(0);
 
+			popupContent.getChildren().addAll(this.name, this.latitude, this.longitude, this.magnitude);
 			this.getContent().add(popupContent);
 		}
 
@@ -153,15 +153,15 @@ public class Satellite extends Sphere {
 		}
 
 		public void setLatitude(double latitude) {
-			this.latitude.setText("Latitude:\t" + latitude);
+			this.latitude.setText("Latitude:\t\t" + Math.round(latitude * 100.) / 100.0 + "°");
 		}
 
 		public void setLongitude(double longitude) {
-			this.longitude.setText("Longitude:\t" + longitude);
+			this.longitude.setText("Longitude:\t" +  Math.round(longitude * 100) / 100.0 + "°");
 		}
 
 		public void setMagnitude(double magnitude) {
-			this.magnitude.setText("Magnitude:\t" + magnitude);
+			this.magnitude.setText("Distance:\t\t" +  Math.round(magnitude) + "km (not simulated)");
 		}
 	}
 }
