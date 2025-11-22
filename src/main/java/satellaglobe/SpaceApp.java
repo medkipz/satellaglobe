@@ -1,5 +1,6 @@
 package satellaglobe;
 
+import java.nio.file.SecureDirectoryStream;
 import java.util.*;
 
 import org.controlsfx.control.CheckComboBox;
@@ -7,8 +8,7 @@ import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.control.Slider;
-import javafx.scene.control.ToolBar;
+import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Sphere;
@@ -51,7 +51,7 @@ public class SpaceApp extends Application {
 		SubScene view3d = new SubScene(pivot, WIDTH, HEIGHT, true, SceneAntialiasing.BALANCED);
 		BorderPane ui = new BorderPane();
 		CheckComboBox<String> satellitePicker = new CheckComboBox<>(satelliteNames);
-		Scene scene = new Scene(ui);
+		Scene scene = new Scene(ui, WIDTH, HEIGHT);
 		Slider coordinatesSlider = new Slider();
 		ToolBar toolBar = new ToolBar();
 		Rotate rotate = new Rotate(0, Rotate.Y_AXIS);
@@ -83,22 +83,21 @@ public class SpaceApp extends Application {
 
 		coordinatesSlider.setMin(0);
 		coordinatesSlider.setMax(1);
-		coordinatesSlider.setValue(0);
+		coordinatesSlider.setValue(1);
 
 		ui.setCenter(view3d);
 
 		toolBar.getItems().addAll(satellitePicker, coordinatesSlider);
 
+		satellitePicker.getCheckModel().getCheckedItems().addListener((ListChangeListener<String>) change -> {
+			change.next(); // Quirk of ListChangeListener
 
-		satellitePicker.getCheckModel().getCheckedItems().addListener((ListChangeListener<String>) c -> {
-			satellites.getChildren().removeIf(n -> n instanceof Satellite);
-
-			for (String name : satellitePicker.getCheckModel().getCheckedItems()) {
-				String id = satelliteIdHashMap.get(name);
+			for (String added : change.getAddedSubList()) {
+				String id = satelliteIdHashMap.get(added);
 				List<List<Double>> coordinates = NasaApiClient.getSatelliteLatLonMag(id);
 
 				Satellite satellite = new Satellite(
-					name,
+					added,
 					coordinates.get(0),
 					coordinates.get(1),
 					coordinates.get(2),
@@ -106,8 +105,16 @@ public class SpaceApp extends Application {
 				);
 
 				satellite.radiusProperty().bind(view3d.heightProperty().divide(25));
-
 				satellites.getChildren().add(satellite);
+			}
+
+			for (String removed : change.getRemoved()) {
+				for (int index = satellites.getChildren().size() - 1; index >= 0; index--) {
+					Node node = satellites.getChildren().get(index);
+					if (node instanceof Satellite satellite && satellite.getName().equals(removed)) {
+						satellites.getChildren().remove(satellite);
+					}
+				}
 			}
 		});
 

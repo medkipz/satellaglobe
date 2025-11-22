@@ -3,14 +3,13 @@ package satellaglobe;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.geometry.Point2D;
-import javafx.scene.control.Label;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.SubScene;
+import javafx.scene.control.*;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Sphere;
-import javafx.stage.Popup;
 import java.util.*;
 
 /**
@@ -28,7 +27,7 @@ public class Satellite extends Sphere {
 
 	private IntegerProperty listIndex;
 
-	private SatelliteInfoPopup satelliteInfo;
+	private SatelliteInfoLabel satelliteInfo;
 
 	 /**
      * Satellite Constructor 
@@ -42,7 +41,7 @@ public class Satellite extends Sphere {
 		super();
 
 		// Popup window to display relevant satellite information on hover
-		this.satelliteInfo = new SatelliteInfoPopup();
+		this.satelliteInfo = new SatelliteInfoLabel();
 		this.listIndex = new SimpleIntegerProperty();
 
 		this.setName(name);
@@ -51,22 +50,13 @@ public class Satellite extends Sphere {
 		this.setMagnitudes(magnitudes);
 		this.setListIndex(listIndex);
 
-		// Color value to apply to satellites on hover
-        PhongMaterial hoverColor = new PhongMaterial();
-        hoverColor.setDiffuseColor(Color.ORANGE);
+        //PhongMaterial randomColor = new PhongMaterial();
+        //randomColor.setDiffuseColor(Color.hsb(Math.random() * 360, 1.0, 1.0));
+		//this.setMaterial(randomColor);
 
-		 //Changes satellite color to orange and displays the popup when hovered over
-        this.addEventHandler(MouseEvent.MOUSE_ENTERED, unused -> {
-            this.setMaterial(hoverColor);
-            Point2D screenPos = this.localToScreen(0, 0);
-            this.satelliteInfo.show(this, screenPos.getX() + 20, screenPos.getY() + 20);
-        });
+		//this.satelliteInfo.show(this, screenPos.getX() + 20, screenPos.getY() + 20);
 
-		//Removes coloring and popup once mouse is moved away from the satellite
-        this.addEventHandler(MouseEvent.MOUSE_EXITED, unused -> {
-            this.setMaterial(null);
-            this.satelliteInfo.hide();
-        });
+		
 
 		this.translateXProperty().bind(Bindings.createDoubleBinding(() -> {
 			return this.getRadius() * 8 * Math.cos(this.getLatitudes().get(this.getListIndex()) * RADIAN_CONVERSION)
@@ -137,13 +127,13 @@ public class Satellite extends Sphere {
 	/**
 	 * Private inner class for satellite information hover popup
 	 */
-	protected class SatelliteInfoPopup extends Popup {
+	protected class SatelliteInfoLabel extends Label {
 		private Label name;
 		private Label latitude;
 		private Label longitude;
 		private Label magnitude;
 
-		public SatelliteInfoPopup() {
+		public SatelliteInfoLabel() {
 			super();
 
 			this.name = new Label();
@@ -159,7 +149,7 @@ public class Satellite extends Sphere {
 			VBox popupContent = new VBox(1);
 
 			popupContent.getChildren().addAll(this.name, this.latitude, this.longitude, this.magnitude);
-			this.getContent().add(popupContent);
+			this.getChildren().add(popupContent);
 		}
 
 		public void setName(String name) {
