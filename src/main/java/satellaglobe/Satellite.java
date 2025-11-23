@@ -58,11 +58,9 @@ public class Satellite extends Sphere {
 		this.setMagnitudes(magnitudes);
 		this.setListIndex(listIndex);
 
-        //PhongMaterial randomColor = new PhongMaterial();
-        //randomColor.setDiffuseColor(Color.hsb(Math.random() * 360, 1.0, 1.0));
-		//this.setMaterial(randomColor);
-
-		//this.satelliteInfo.show(this, screenPos.getX() + 20, screenPos.getY() + 20);
+        PhongMaterial randomColor = new PhongMaterial();
+        randomColor.setDiffuseColor(Color.hsb(Math.random() * 360, 0.5, 1.0));
+		this.setMaterial(randomColor);
 		
 		this.translateXProperty().bind(Bindings.createDoubleBinding(() -> {
 			return this.getRadius() * 8 * Math.cos(this.getLatitudes().get(this.getListIndex()) * RADIAN_CONVERSION)
