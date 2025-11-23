@@ -1,8 +1,6 @@
 package satellaglobe;
 
-import java.nio.file.SecureDirectoryStream;
 import java.util.*;
-
 import org.controlsfx.control.CheckComboBox;
 import javafx.application.Application;
 import javafx.scene.*;
@@ -35,11 +33,16 @@ public class SpaceApp extends Application {
     //Main method override for java applications
     @Override
     public void start(Stage stage) {
-		final ObservableList<String> satelliteNames = FXCollections.observableList(NasaApiClient.GetAllActiveSatelliteNames());
+		final List<String> satelliteNames = FXCollections.observableList(NasaApiClient.GetAllActiveSatelliteNames());
 		final Map<String, String> satelliteIdHashMap = NasaApiClient.GetSatelliteNameIdMap();
 
 		final Image backgroundStars = new Image(getClass().getResource("/satellaglobe/backgroundStars.png").toExternalForm());
 		final Image globeTexture = new Image(getClass().getResource("/satellaglobe/globeTexture.jpg").toExternalForm());
+
+		// Track active satellites by name for fast lookup and safe removal
+		final Map<String, Satellite> activeSatellites = new HashMap<>();
+		// Mutable snapshot of the checked items; keep the reference final so lambda can mutate contents
+		final List<String> previousChecked = new ArrayList<>(/*initial*/ Collections.emptyList());
 
         // 3D model to represent Earth and center it in the scene
         Sphere globe = new Sphere();
@@ -50,11 +53,18 @@ public class SpaceApp extends Application {
 		Group pivot = new Group(model);
 		SubScene view3d = new SubScene(pivot, WIDTH, HEIGHT, true, SceneAntialiasing.BALANCED);
 		BorderPane ui = new BorderPane();
-		CheckComboBox<String> satellitePicker = new CheckComboBox<>(satelliteNames);
+		CheckComboBox<String> satellitePicker = new CheckComboBox<>();
 		Scene scene = new Scene(ui, WIDTH, HEIGHT);
 		Slider coordinatesSlider = new Slider();
 		ToolBar toolBar = new ToolBar();
 		Rotate rotate = new Rotate(0, Rotate.Y_AXIS);
+
+		/*
+		For some bizarre reason the CheckComboBox would throw an error every single time the THIRD checkbox was checked.
+		Adding items to the CheckComboBox this way is the only way to avoid this
+		????????
+		*/
+		satellitePicker.getItems().setAll(satelliteNames); // Hell
 		
         globeMaterial.setDiffuseMap(globeTexture);
 		globe.radiusProperty().bind(view3d.heightProperty().divide(5));
@@ -89,33 +99,54 @@ public class SpaceApp extends Application {
 
 		toolBar.getItems().addAll(satellitePicker, coordinatesSlider);
 
+		previousChecked.clear();
+		previousChecked.addAll(satellitePicker.getCheckModel().getCheckedItems());
+
 		satellitePicker.getCheckModel().getCheckedItems().addListener((ListChangeListener<String>) change -> {
-			change.next(); // Quirk of ListChangeListener
+			List<String> currentChecked = new ArrayList<>(satellitePicker.getCheckModel().getCheckedItems());
 
-			for (String added : change.getAddedSubList()) {
-				String id = satelliteIdHashMap.get(added);
-				List<List<Double>> coordinates = NasaApiClient.getSatelliteLatLonMag(id);
+			Set<String> currentSet = new HashSet<>(currentChecked);
+			Set<String> previousSet = new HashSet<>(previousChecked);
 
-				Satellite satellite = new Satellite(
-					added,
-					coordinates.get(0),
-					coordinates.get(1),
-					coordinates.get(2),
-					(int) Math.round(coordinatesSlider.getValue() * (coordinates.get(0).size() - 1))
-				);
-
-				satellite.radiusProperty().bind(view3d.heightProperty().divide(25));
-				satellites.getChildren().add(satellite);
-			}
-
-			for (String removed : change.getRemoved()) {
-				for (int index = satellites.getChildren().size() - 1; index >= 0; index--) {
-					Node node = satellites.getChildren().get(index);
-					if (node instanceof Satellite satellite && satellite.getName().equals(removed)) {
-						satellites.getChildren().remove(satellite);
+			// Removed = prev - current
+			for (String removed : previousSet) {
+				if (!currentSet.contains(removed)) {
+					Satellite toRemove = activeSatellites.remove(removed);
+					if (toRemove != null) {
+						satellites.getChildren().remove(toRemove);
 					}
 				}
 			}
+
+			// Added = current - prev
+			for (String added : currentSet) {
+				if (!previousSet.contains(added)) {
+					if (activeSatellites.containsKey(added)) continue;
+
+					String id = satelliteIdHashMap.get(added);
+					if (id == null) continue;
+
+					List<List<Double>> coordinates = NasaApiClient.getSatelliteLatLonMag(id);
+
+					if (coordinates == null || coordinates.size() < 3 || coordinates.get(0).isEmpty()) {
+						return;
+					}
+
+					Satellite satellite = new Satellite(
+							added,
+							coordinates.get(0),
+							coordinates.get(1),
+							coordinates.get(2),
+							(int) Math.round(coordinatesSlider.getValue() * (coordinates.get(0).size() - 1)));
+
+					satellite.radiusProperty().bind(view3d.heightProperty().divide(25));
+					activeSatellites.put(added, satellite);
+					satellites.getChildren().add(satellite);
+				}
+			}
+
+			previousChecked.clear();
+			previousChecked.addAll(currentChecked);
 		});
 
 		coordinatesSlider.valueProperty().addListener((objects, oldValue, newValue) -> {
@@ -127,6 +158,7 @@ public class SpaceApp extends Application {
 					satellite.setListIndex(index);
 				}
 			}
+			
 		});
 
 		toolBar.setOrientation(Orientation.VERTICAL);

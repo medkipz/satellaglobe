@@ -3,13 +3,20 @@ package satellaglobe;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.event.EventType;
 import javafx.scene.SubScene;
 import javafx.scene.control.*;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Sphere;
+import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import java.util.*;
 
 /**
@@ -27,7 +34,7 @@ public class Satellite extends Sphere {
 
 	private IntegerProperty listIndex;
 
-	private SatelliteInfoLabel satelliteInfo;
+	private SatelliteInfoVBox satelliteInfo;
 
 	 /**
      * Satellite Constructor 
@@ -41,7 +48,7 @@ public class Satellite extends Sphere {
 		super();
 
 		// Popup window to display relevant satellite information on hover
-		this.satelliteInfo = new SatelliteInfoLabel();
+		this.satelliteInfo = new SatelliteInfoVBox();
 		this.listIndex = new SimpleIntegerProperty();
 
 		this.setName(name);
@@ -55,9 +62,7 @@ public class Satellite extends Sphere {
 		//this.setMaterial(randomColor);
 
 		//this.satelliteInfo.show(this, screenPos.getX() + 20, screenPos.getY() + 20);
-
 		
-
 		this.translateXProperty().bind(Bindings.createDoubleBinding(() -> {
 			return this.getRadius() * 8 * Math.cos(this.getLatitudes().get(this.getListIndex()) * RADIAN_CONVERSION)
 					* Math.cos(this.getLongitudes().get(this.getListIndex()) * RADIAN_CONVERSION);
@@ -71,6 +76,45 @@ public class Satellite extends Sphere {
 		this.translateYProperty().bind(Bindings.createDoubleBinding(() -> {
 			return this.getRadius() * 8 * -Math.sin(this.getLatitudes().get(this.getListIndex()) * RADIAN_CONVERSION);
 		}, this.radiusProperty(), this.listIndexProperty()));
+
+		this.localToSceneTransformProperty().addListener((obs, oldVal, newVal) -> {
+            updateSatelliteInfoPosition();
+        });
+
+		this.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                if (newScene.getRoot() instanceof Pane root) {
+                    if (!root.getChildren().contains(satelliteInfo)) {
+                        root.getChildren().add(satelliteInfo);
+                    }
+					this.updateSatelliteInfoPosition();
+                }
+			}
+        });
+
+		this.parentProperty().addListener((obs, oldParent, newParent) -> {
+			if (oldParent instanceof Pane oldPane && newParent == null) {
+				System.out.println("test");
+				oldPane.getChildren().remove(satelliteInfo);
+			}
+		});
+	}
+
+	/**
+	 * Helper method for binding satelliteInfo position to Satellite's 2D space
+	*/
+	private void updateSatelliteInfoPosition() {
+		if (this.getScene() == null || this.getScene().getRoot() == null) return;
+
+		// Satellite center relative to scene
+		Point2D scenePosition = this.localToScene(0, 0);
+		if (scenePosition == null) return;
+
+		// Convert scene coords → Pane's local coords
+		Point2D panePosition = this.getScene().getRoot().sceneToLocal(scenePosition);
+
+		satelliteInfo.setTranslateX(panePosition.getX());
+		satelliteInfo.setTranslateY(panePosition.getY());
 	}
 
 	public void setName(String name) {
@@ -120,6 +164,7 @@ public class Satellite extends Sphere {
 		this.satelliteInfo.setLongitude(this.getLongitudes().get(this.getListIndex()));
 		this.satelliteInfo.setMagnitude(this.getMagnitudes().get(this.getListIndex()));
 	}
+
 	public int getListIndex() {
 		return this.listIndex.get();
 	}
@@ -127,14 +172,17 @@ public class Satellite extends Sphere {
 	/**
 	 * Private inner class for satellite information hover popup
 	 */
-	protected class SatelliteInfoLabel extends Label {
+	protected class SatelliteInfoVBox extends VBox {
 		private Label name;
 		private Label latitude;
 		private Label longitude;
 		private Label magnitude;
 
-		public SatelliteInfoLabel() {
-			super();
+
+		public SatelliteInfoVBox() {
+			super(1);
+			this.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
+			this.setWidth(256);
 
 			this.name = new Label();
 			this.latitude = new Label();
@@ -146,10 +194,7 @@ public class Satellite extends Sphere {
 			this.longitude.setTextFill(Color.WHITE);
 			this.magnitude.setTextFill(Color.WHITE);
 
-			VBox popupContent = new VBox(1);
-
-			popupContent.getChildren().addAll(this.name, this.latitude, this.longitude, this.magnitude);
-			this.getChildren().add(popupContent);
+			this.getChildren().addAll(this.name, this.latitude, this.longitude, this.magnitude);
 		}
 
 		public void setName(String name) {
