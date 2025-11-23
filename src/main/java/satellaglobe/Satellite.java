@@ -39,7 +39,7 @@ public class Satellite extends Sphere {
      * 
      * @param name for name of satellite
      * @param latitudes for latitudinal position of satellite
-     * @param longitudes for longitudinal position of satellite
+     * @param longitudes for longitudinal position of satellite in GEO coordinate system
      * @param magnitudes for (not simulated) distance from earth
 	 */
 	public Satellite(String name, List<Double> latitudes, List<Double> longitudes, List<Double> magnitudes, double listProportion) {
@@ -299,6 +299,8 @@ public class Satellite extends Sphere {
 		}
 
 		public void setLongitude(double longitude) {
+			// Convert longitude to GIS standard
+			longitude = ((longitude + 180.0) % 360.0 + 360.0) % 360.0 - 180.0;
 			this.longitude.setText("Longitude:\t" +  Math.round(longitude * 100) / 100.0 + "°");
 		}
 

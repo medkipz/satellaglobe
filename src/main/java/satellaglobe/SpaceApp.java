@@ -214,7 +214,7 @@ public class SpaceApp extends Application {
 		scene.setOnMouseDragged(event -> {
 			rotate.setAngle(modelStartX - (event.getSceneX() - mouseStartX) * 0.4);
 
-			double bgOffsetX = -(rotate.getAngle() % 360) / 360.0;
+			double bgOffsetX = (rotate.getAngle() % 360) / 360.0;
 			view3d.setFill(new javafx.scene.paint.ImagePattern(backgroundStars, bgOffsetX, 0, 1, 1, true));
 		});
 		
