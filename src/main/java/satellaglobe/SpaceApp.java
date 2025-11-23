@@ -59,6 +59,7 @@ public class SpaceApp extends Application {
 		Scene scene = new Scene(ui, WIDTH, HEIGHT);
 		Slider coordinatesSlider = new Slider();
 		Label timeLabel = new Label();
+		Label distanceDisclaimerLabel = new Label("Note: distance is not simulated.");
 		CheckBox realtimeCheckBox = new CheckBox("Realtime");
 		ToolBar toolBar = new ToolBar();
 		Rotate rotate = new Rotate(0, Rotate.Y_AXIS);
@@ -101,7 +102,7 @@ public class SpaceApp extends Application {
 
 		ui.setCenter(view3d);
 
-		toolBar.getItems().addAll(satellitePicker, coordinatesSlider, realtimeCheckBox, timeLabel);
+		toolBar.getItems().addAll(satellitePicker, coordinatesSlider, realtimeCheckBox, timeLabel, distanceDisclaimerLabel);
 
 		previousChecked.clear();
 		previousChecked.addAll(satellitePicker.getCheckModel().getCheckedItems());

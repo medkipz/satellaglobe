@@ -143,8 +143,36 @@ public class Satellite extends Sphere {
 		return this.longitudes;
 	}
 
+	/**
+	 * Get longitude at the current percentage of the listProportion property
+	 * @return double longitude interpolated between two nearest longitudes in their list
+	 */
 	public double getLongitudeAtCurrentProportion() {
-		return this.getListValueAtCurrentProportion(longitudes);
+		// Requires special handling because of wrap-around
+		if (longitudes == null || longitudes.isEmpty()) return 0.0;
+
+		double proportion = this.getListProportion();
+		double scaledIndex = proportion * (longitudes.size() - 1);
+
+		int indexLow = (int) Math.floor(scaledIndex);
+		int indexHigh = (int) Math.ceil(scaledIndex);
+
+		if (indexLow < 0) indexLow = 0;
+		if (indexHigh >= longitudes.size()) indexHigh = longitudes.size() - 1;
+
+		double low = longitudes.get(indexLow);
+		double high = longitudes.get(indexHigh);
+
+		if (indexLow == indexHigh) {
+			return (low % 360 + 360) % 360;
+		} else {
+			// Account for wrap-around at the 180th degree
+			double alpha = scaledIndex - indexLow;
+			double delta = ((high - low + 540.0) % 360.0) - 180.0;
+			double interpolated = low + alpha * delta;
+
+			return (interpolated % 360.0 + 360.0) % 360.0;
+		}
 	}
 
 	public void setMagnitudes(List<Double> magnitudes) {
@@ -156,6 +184,10 @@ public class Satellite extends Sphere {
 		return this.magnitudes;
 	}
 
+	/**
+	 * Get magnitude at the current percentage of the listProportion property
+	 * @return double magnitude interpolated between two nearest magnitudes in their list
+	 */
 	public double getMagnitudeAtCurrentProportion() {
 		return this.getListValueAtCurrentProportion(magnitudes);
 	}
@@ -271,7 +303,7 @@ public class Satellite extends Sphere {
 		}
 
 		public void setMagnitude(double magnitude) {
-			this.magnitude.setText("Distance:\t\t" +  Math.round(magnitude) + "km (not simulated)");
+			this.magnitude.setText("Distance:\t\t" +  Math.round(magnitude) + "km");
 		}
 	}
 }
