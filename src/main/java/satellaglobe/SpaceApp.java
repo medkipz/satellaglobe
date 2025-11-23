@@ -139,7 +139,8 @@ public class SpaceApp extends Application {
 							coordinates.get(0),
 							coordinates.get(1),
 							coordinates.get(2),
-							(int) Math.round(coordinatesSlider.getValue() * (coordinates.get(0).size() - 1)));
+							coordinatesSlider.getValue()
+					);
 
 					satellite.radiusProperty().bind(view3d.heightProperty().divide(25));
 					activeSatellites.put(added, satellite);
@@ -152,36 +153,44 @@ public class SpaceApp extends Application {
 		});
 
 		coordinatesSlider.valueProperty().addListener((objects, oldValue, newValue) -> {
-			double indexProportion = newValue.doubleValue();
+			double listProportion = newValue.doubleValue();
 
 			for (Node node : satellites.getChildren()) {
 				if (node instanceof Satellite satellite) {
-					int index = (int) Math.round(indexProportion * (satellite.getLatitudes().size() - 1));
-					satellite.setListIndex(index);
+					satellite.setListProportion(listProportion);
 				}
 			}
 
-			long millis = NasaApiClient.START_DATE.getTime() + (long) Math.round(indexProportion * (NasaApiClient.END_DATE.getTime() - NasaApiClient.START_DATE.getTime()));
+			long millis = NasaApiClient.START_DATE.getTime() + (long) Math.round(listProportion * (NasaApiClient.END_DATE.getTime() - NasaApiClient.START_DATE.getTime()));
 			timeLabel.setText("Time: " + utcFormat.format(new Date(millis)));
 		});
 
-		realtimeCheckBox.selectedProperty().addListener((obs, oldV, newV) -> {
-			if (newV) {
+		realtimeCheckBox.selectedProperty().addListener((obs, wasChecked, isChecked) -> {
+			if (isChecked) {
 				coordinatesSlider.setDisable(true);
 				final javafx.animation.Timeline[] realtimeTimelineHolder = new javafx.animation.Timeline[1];
 				realtimeTimelineHolder[0] = new javafx.animation.Timeline(
-					new javafx.animation.KeyFrame(javafx.util.Duration.seconds(1), evt -> {
+					new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), evt -> {
 						if (!realtimeCheckBox.isSelected()) {
 							realtimeTimelineHolder[0].stop();
 							return;
 						}
+
 						long now = System.currentTimeMillis();
 						long start = NasaApiClient.START_DATE.getTime();
 						long end = NasaApiClient.END_DATE.getTime();
-						double proportion = (end > start) ? Math.max(0.0, Math.min(1.0, (now - start) / (double) (end - start))) : 0.0;
+
+						double proportion;
+						if (end > start) {
+							proportion = Math.clamp((now - start) / (double) (end - start), 0.0, 1.0);
+						} else {
+							proportion = 0.0;
+						}
+
 						coordinatesSlider.setValue(proportion);
 					})
 				);
+
 				realtimeTimelineHolder[0].setCycleCount(javafx.animation.Animation.INDEFINITE);
 				realtimeTimelineHolder[0].play();
 			} else {
