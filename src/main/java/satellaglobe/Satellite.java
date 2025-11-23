@@ -17,6 +17,7 @@ import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Sphere;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.geometry.Bounds;
 import java.util.*;
 
 /**
@@ -82,20 +83,30 @@ public class Satellite extends Sphere {
         });
 
 		this.sceneProperty().addListener((obs, oldScene, newScene) -> {
-            if (newScene != null) {
-                if (newScene.getRoot() instanceof Pane root) {
-                    if (!root.getChildren().contains(satelliteInfo)) {
-                        root.getChildren().add(satelliteInfo);
-                    }
+			if (newScene != null) {
+				if (newScene.getRoot() instanceof Pane root) {
+					if (!root.getChildren().contains(satelliteInfo)) {
+						root.getChildren().add(satelliteInfo);
+					}
 					this.updateSatelliteInfoPosition();
-                }
+				}
+			} else {
+				// Satellite was removed from the scene: ensure the info box is removed
+				if (oldScene != null && oldScene.getRoot() instanceof Pane oldRoot) {
+					oldRoot.getChildren().remove(satelliteInfo);
+				}
 			}
         });
 
 		this.parentProperty().addListener((obs, oldParent, newParent) -> {
-			if (oldParent instanceof Pane oldPane && newParent == null) {
-				System.out.println("test");
-				oldPane.getChildren().remove(satelliteInfo);
+			if (newParent == null) {
+				if (oldParent instanceof Pane oldPane) {
+					oldPane.getChildren().remove(satelliteInfo);
+				} else {
+					if (this.getScene() != null && this.getScene().getRoot() instanceof Pane root) {
+						root.getChildren().remove(satelliteInfo);
+					}
+				}
 			}
 		});
 	}
@@ -106,15 +117,18 @@ public class Satellite extends Sphere {
 	private void updateSatelliteInfoPosition() {
 		if (this.getScene() == null || this.getScene().getRoot() == null) return;
 
-		// Satellite center relative to scene
-		Point2D scenePosition = this.localToScene(0, 0);
-		if (scenePosition == null) return;
+		Point2D screenPos = this.localToScreen(0, 0);
+		if (screenPos == null) return;
 
-		// Convert scene coords → Pane's local coords
-		Point2D panePosition = this.getScene().getRoot().sceneToLocal(scenePosition);
+		Point2D panePosition = this.getScene().getRoot().screenToLocal(screenPos);
+		if (panePosition == null) return;
 
-		satelliteInfo.setTranslateX(panePosition.getX());
-		satelliteInfo.setTranslateY(panePosition.getY());
+		Bounds infoBounds = satelliteInfo.getLayoutBounds();
+		double offsetX = -infoBounds.getWidth() / 2.0;
+		double offsetY = -infoBounds.getHeight() - 8.0;
+
+		satelliteInfo.setTranslateX(panePosition.getX() + offsetX);
+		satelliteInfo.setTranslateY(panePosition.getY() + offsetY);
 	}
 
 	public void setName(String name) {
