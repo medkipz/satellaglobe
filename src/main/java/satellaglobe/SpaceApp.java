@@ -1,6 +1,8 @@
 package satellaglobe;
 
 import java.util.*;
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
 import org.controlsfx.control.CheckComboBox;
 import javafx.application.Application;
 import javafx.scene.*;
@@ -56,8 +58,12 @@ public class SpaceApp extends Application {
 		CheckComboBox<String> satellitePicker = new CheckComboBox<>();
 		Scene scene = new Scene(ui, WIDTH, HEIGHT);
 		Slider coordinatesSlider = new Slider();
+		Label timeLabel = new Label();
 		ToolBar toolBar = new ToolBar();
 		Rotate rotate = new Rotate(0, Rotate.Y_AXIS);
+
+		final SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+		utcFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
 		/*
 		For some bizarre reason the CheckComboBox would throw an error every single time the THIRD checkbox was checked.
@@ -93,11 +99,11 @@ public class SpaceApp extends Application {
 
 		coordinatesSlider.setMin(0);
 		coordinatesSlider.setMax(1);
-		coordinatesSlider.setValue(1);
+		coordinatesSlider.setValue(0.5);
 
 		ui.setCenter(view3d);
 
-		toolBar.getItems().addAll(satellitePicker, coordinatesSlider);
+		toolBar.getItems().addAll(satellitePicker, coordinatesSlider, timeLabel);
 
 		previousChecked.clear();
 		previousChecked.addAll(satellitePicker.getCheckModel().getCheckedItems());
@@ -108,7 +114,6 @@ public class SpaceApp extends Application {
 			Set<String> currentSet = new HashSet<>(currentChecked);
 			Set<String> previousSet = new HashSet<>(previousChecked);
 
-			// Removed = prev - current
 			for (String removed : previousSet) {
 				if (!currentSet.contains(removed)) {
 					Satellite toRemove = activeSatellites.remove(removed);
@@ -118,7 +123,6 @@ public class SpaceApp extends Application {
 				}
 			}
 
-			// Added = current - prev
 			for (String added : currentSet) {
 				if (!previousSet.contains(added)) {
 					if (activeSatellites.containsKey(added)) continue;
@@ -158,7 +162,13 @@ public class SpaceApp extends Application {
 					satellite.setListIndex(index);
 				}
 			}
-			
+
+			Date currentDate = new Date();
+			Date endDate = new Date(currentDate.getTime() + 3600 * 10000);
+			Date startDate = new Date(currentDate.getTime() - 3600 * 10000);
+
+			long millis = startDate.getTime() + (long) Math.round(indexProportion * (endDate.getTime() - startDate.getTime()));
+			timeLabel.setText("Time: " + utcFormat.format(new Date(millis)));
 		});
 
 		toolBar.setOrientation(Orientation.VERTICAL);

@@ -73,8 +73,9 @@ public class NasaApiClient {
 	}
 
 	public static final SatelliteResponse getSatelliteResponse(String satelliteId) {
-		Date endDate  = new Date();
-		Date startDate = new Date(endDate.getTime() - 3600 * 10000);
+		Date currentDate = new Date();
+		Date endDate  = new Date(currentDate.getTime() + 3600 * 10000);
+		Date startDate = new Date(currentDate.getTime() - 3600 * 10000);
 
 		String startTime = (new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")).format(startDate);
 		String endTime = (new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")).format(endDate);

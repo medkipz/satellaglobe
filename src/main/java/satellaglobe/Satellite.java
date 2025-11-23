@@ -82,6 +82,7 @@ public class Satellite extends Sphere {
 
 		this.sceneProperty().addListener((obs, oldScene, newScene) -> {
 			if (newScene != null) {
+				// Satellite was added to a scene, so add the satelliteInfo too
 				if (newScene.getRoot() instanceof Pane root) {
 					if (!root.getChildren().contains(satelliteInfo)) {
 						root.getChildren().add(satelliteInfo);
@@ -89,7 +90,7 @@ public class Satellite extends Sphere {
 					this.updateSatelliteInfoPosition();
 				}
 			} else {
-				// Satellite was removed from the scene: ensure the info box is removed
+				// Satellite was removed from the scene, so delete the satelliteInfo too
 				if (oldScene != null && oldScene.getRoot() instanceof Pane oldRoot) {
 					oldRoot.getChildren().remove(satelliteInfo);
 				}
@@ -101,6 +102,7 @@ public class Satellite extends Sphere {
 				if (oldParent instanceof Pane oldPane) {
 					oldPane.getChildren().remove(satelliteInfo);
 				} else {
+					// Satellite was removed from the parent, so delete the satelliteInfo too
 					if (this.getScene() != null && this.getScene().getRoot() instanceof Pane root) {
 						root.getChildren().remove(satelliteInfo);
 					}
@@ -111,7 +113,7 @@ public class Satellite extends Sphere {
 
 	/**
 	 * Helper method for binding satelliteInfo position to Satellite's 2D space
-	*/
+	 */
 	private void updateSatelliteInfoPosition() {
 		if (this.getScene() == null || this.getScene().getRoot() == null) return;
 
