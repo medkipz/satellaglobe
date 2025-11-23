@@ -9,6 +9,10 @@ import jakarta.xml.bind.*;
  * Utility class for interacting with the NASA API.
  */
 public class NasaApiClient {
+	public static final Date CURRENT_DATE = new Date();
+	public static final Date START_DATE = new Date(CURRENT_DATE.getTime() - 3600 * 10000);
+	public static final Date END_DATE = new Date(CURRENT_DATE.getTime() + 3600 * 10000);
+
 	/**
 	 * Get a list of all satellite names from the NASA API.
 	 * @return A list of satellite names
@@ -28,8 +32,6 @@ public class NasaApiClient {
 	 * @return A list of satellite names that are currently active
 	 */
 	public static final List<String> GetAllActiveSatelliteNames() {
-		Date currentDate = new Date();
-
 		List<Observatory> observatories = GetAllObservatories();
 		List<String> names = new ArrayList<>();
 
@@ -37,9 +39,9 @@ public class NasaApiClient {
 		for (int index = observatories.size() - 1; index > 0 ; index--) {
 			DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 			try {
-				Date endDate = df.parse(observatories.get(index).getEndTime());
+				Date satelliteEndDate = df.parse(observatories.get(index).getEndTime());
 
-				if (endDate.before(currentDate)) {
+				if (satelliteEndDate.before(CURRENT_DATE)) {
 					observatories.remove(index);
 				}
 			} catch (ParseException e) {
@@ -73,12 +75,8 @@ public class NasaApiClient {
 	}
 
 	public static final SatelliteResponse getSatelliteResponse(String satelliteId) {
-		Date currentDate = new Date();
-		Date endDate  = new Date(currentDate.getTime() + 3600 * 10000);
-		Date startDate = new Date(currentDate.getTime() - 3600 * 10000);
-
-		String startTime = (new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")).format(startDate);
-		String endTime = (new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")).format(endDate);
+		String startTime = (new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")).format(START_DATE);
+		String endTime = (new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")).format(END_DATE);
 
 		try {
 			String xmlData = HttpRequester.getUrlData("https://sscweb.gsfc.nasa.gov/WS/sscr/2/locations/" + satelliteId + "/" + startTime + "," + endTime + "/geo");

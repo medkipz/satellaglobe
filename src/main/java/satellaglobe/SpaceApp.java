@@ -59,18 +59,14 @@ public class SpaceApp extends Application {
 		Scene scene = new Scene(ui, WIDTH, HEIGHT);
 		Slider coordinatesSlider = new Slider();
 		Label timeLabel = new Label();
+		CheckBox realtimeCheckBox = new CheckBox("Realtime");
 		ToolBar toolBar = new ToolBar();
 		Rotate rotate = new Rotate(0, Rotate.Y_AXIS);
 
 		final SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 		utcFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-		/*
-		For some bizarre reason the CheckComboBox would throw an error every single time the THIRD checkbox was checked.
-		Adding items to the CheckComboBox this way is the only way to avoid this
-		????????
-		*/
-		satellitePicker.getItems().setAll(satelliteNames); // Hell
+		satellitePicker.getItems().setAll(satelliteNames);
 		
         globeMaterial.setDiffuseMap(globeTexture);
 		globe.radiusProperty().bind(view3d.heightProperty().divide(5));
@@ -101,9 +97,11 @@ public class SpaceApp extends Application {
 		coordinatesSlider.setMax(1);
 		coordinatesSlider.setValue(0.5);
 
+		timeLabel.setText("Time: " + utcFormat.format(NasaApiClient.CURRENT_DATE));
+
 		ui.setCenter(view3d);
 
-		toolBar.getItems().addAll(satellitePicker, coordinatesSlider, timeLabel);
+		toolBar.getItems().addAll(satellitePicker, coordinatesSlider, realtimeCheckBox, timeLabel);
 
 		previousChecked.clear();
 		previousChecked.addAll(satellitePicker.getCheckModel().getCheckedItems());
@@ -163,12 +161,32 @@ public class SpaceApp extends Application {
 				}
 			}
 
-			Date currentDate = new Date();
-			Date endDate = new Date(currentDate.getTime() + 3600 * 10000);
-			Date startDate = new Date(currentDate.getTime() - 3600 * 10000);
-
-			long millis = startDate.getTime() + (long) Math.round(indexProportion * (endDate.getTime() - startDate.getTime()));
+			long millis = NasaApiClient.START_DATE.getTime() + (long) Math.round(indexProportion * (NasaApiClient.END_DATE.getTime() - NasaApiClient.START_DATE.getTime()));
 			timeLabel.setText("Time: " + utcFormat.format(new Date(millis)));
+		});
+
+		realtimeCheckBox.selectedProperty().addListener((obs, oldV, newV) -> {
+			if (newV) {
+				coordinatesSlider.setDisable(true);
+				final javafx.animation.Timeline[] realtimeTimelineHolder = new javafx.animation.Timeline[1];
+				realtimeTimelineHolder[0] = new javafx.animation.Timeline(
+					new javafx.animation.KeyFrame(javafx.util.Duration.seconds(1), evt -> {
+						if (!realtimeCheckBox.isSelected()) {
+							realtimeTimelineHolder[0].stop();
+							return;
+						}
+						long now = System.currentTimeMillis();
+						long start = NasaApiClient.START_DATE.getTime();
+						long end = NasaApiClient.END_DATE.getTime();
+						double proportion = (end > start) ? Math.max(0.0, Math.min(1.0, (now - start) / (double) (end - start))) : 0.0;
+						coordinatesSlider.setValue(proportion);
+					})
+				);
+				realtimeTimelineHolder[0].setCycleCount(javafx.animation.Animation.INDEFINITE);
+				realtimeTimelineHolder[0].play();
+			} else {
+				coordinatesSlider.setDisable(false);
+			}
 		});
 
 		toolBar.setOrientation(Orientation.VERTICAL);
