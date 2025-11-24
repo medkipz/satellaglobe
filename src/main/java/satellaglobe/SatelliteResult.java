@@ -2,6 +2,9 @@ package satellaglobe;
 
 import jakarta.xml.bind.annotation.*;
 
+/**
+ * POJO for satellite result wrapper from NASA SSCWeb API
+ */
 @XmlRootElement(name = "Result", namespace = "http://sscweb.gsfc.nasa.gov/schema")
 public class SatelliteResult {
 	private SatelliteData data;

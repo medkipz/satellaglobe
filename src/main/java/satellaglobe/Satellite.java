@@ -299,7 +299,7 @@ public class Satellite extends Sphere {
 		}
 
 		public void setLongitude(double longitude) {
-			// Convert longitude to GIS standard
+			// Convert longitude to GIS standard for display
 			longitude = ((longitude + 180.0) % 360.0 + 360.0) % 360.0 - 180.0;
 			this.longitude.setText("Longitude:\t" +  Math.round(longitude * 100) / 100.0 + "°");
 		}

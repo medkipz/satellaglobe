@@ -3,6 +3,9 @@ package satellaglobe;
 import jakarta.xml.bind.annotation.*;
 import java.util.List;
 
+/**
+ * POJO for satellite request wrapper from NASA SSCWeb API
+ */
 @XmlRootElement(name = "Data", namespace = "http://sscweb.gsfc.nasa.gov/schema")
 public class SatelliteData {
 	// Lol why do they store coordinates and ""RadialLength"" separately

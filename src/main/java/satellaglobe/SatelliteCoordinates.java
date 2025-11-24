@@ -4,6 +4,9 @@ import java.util.List;
 
 import jakarta.xml.bind.annotation.*;
 
+/**
+ * POJO for coordinates wrapper from NASA SSCWeb API
+ */
 @XmlRootElement(name = "Coordinates", namespace = "http://sscweb.gsfc.nasa.gov/schema")
 public class SatelliteCoordinates {
 	private List<Double> latitude;

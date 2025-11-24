@@ -74,6 +74,11 @@ public class NasaApiClient {
 		}
 	}
 
+	/**
+	 * Get satellite response data from the NASA API by satellite ID. satelliteIds can be obtained from NasaApiClient.GetAllSatelliteIds().
+	 * @param satelliteId
+	 * @return SatelliteResponse object containing the satellite data
+	 */
 	public static final SatelliteResponse getSatelliteResponse(String satelliteId) {
 		String startTime = (new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")).format(START_DATE);
 		String endTime = (new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")).format(END_DATE);
@@ -132,6 +137,11 @@ public class NasaApiClient {
 		return new double[] {0.0, 0.0}; // Placeholder implementation
 	}
 
+	/**
+	 * Get satellite coordinates by its ID from the NASA REST API.
+	 * @param satelliteId The ID of the satellite
+	 * @return A 2D list containing parallel lists of latitude, longitude, and magnitude.
+	 */
 	public static final List<List<Double>> getSatelliteLatLonMag(String satelliteId) {
 		SatelliteResponse response = NasaApiClient.getSatelliteResponse(satelliteId);
 		SatelliteResult satelliteData = response.getSatelliteData();

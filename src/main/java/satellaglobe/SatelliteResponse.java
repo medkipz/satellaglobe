@@ -2,6 +2,9 @@ package satellaglobe;
 
 import jakarta.xml.bind.annotation.*;
 
+/**
+ * POJO for satellite response wrapper from NASA SSCWeb API
+ */
 @XmlRootElement(name = "Response", namespace = "http://sscweb.gsfc.nasa.gov/schema")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class SatelliteResponse {
