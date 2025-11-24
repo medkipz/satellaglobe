@@ -1,23 +1,20 @@
 package satellaglobe;
 
 import java.util.*;
-import java.text.SimpleDateFormat;
-
-import org.controlsfx.control.CheckComboBox;
+import java.text.*;
+import org.controlsfx.control.*;
 import javafx.animation.*;
-import javafx.application.Application;
+import javafx.application.*;
 import javafx.scene.*;
-import javafx.scene.image.Image;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.image.*;
+import javafx.scene.layout.*;
 import javafx.scene.control.*;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.ImagePattern;
-import javafx.scene.paint.PhongMaterial;
-import javafx.scene.shape.Sphere;
-import javafx.scene.transform.Rotate;
+import javafx.scene.paint.*;
+import javafx.scene.shape.*;
+import javafx.scene.transform.*;
 import javafx.stage.*;
 import javafx.collections.*;
-import javafx.geometry.Orientation;
+import javafx.geometry.*;
 
 /**
  * SpaceApp Application creates 3D model for satellite representation 
@@ -27,9 +24,9 @@ import javafx.geometry.Orientation;
  */
 public class SpaceApp extends Application {
 
-    //Scene size variables
+	//Scene size variables
 	private static final int HEIGHT = (int) Screen.getPrimary().getVisualBounds().getHeight() - 32;
-    private static final int WIDTH = (int) Screen.getPrimary().getVisualBounds().getWidth() - 32;	
+	private static final int WIDTH = (int) Screen.getPrimary().getVisualBounds().getWidth() - 32;	
 
 	private double mouseStartX;
 	private double modelStartX;
@@ -61,11 +58,11 @@ public class SpaceApp extends Application {
 	private ToolBar toolBar;
 	private Rotate rotate;
 
-    /**
+	/**
 	 * Main method override for java applications
 	 */
-    @Override
-    public void start(Stage stage) {
+	@Override
+	public void start(Stage stage) {
 		initializeData();
 
 		initialize3d();
@@ -76,11 +73,11 @@ public class SpaceApp extends Application {
 		prepareSliderEventListeners();
 		prepareRealtimeCheckboxEventListeners();
 
-        //Instantiates the scene
-        stage.setTitle("SatellaGlobe");
-        stage.setScene(scene);
-        stage.show();
-    }
+		//Instantiates the scene
+		stage.setTitle("SatellaGlobe");
+		stage.setScene(scene);
+		stage.show();
+	}
 
 	/**
 	 * Helper method for initializing variable data
@@ -112,7 +109,7 @@ public class SpaceApp extends Application {
 		this.globeMaterial.setDiffuseMap(globeTexture);
 
 		this.globe.radiusProperty().bind(view3d.heightProperty().divide(5));
-        this.globe.setMaterial(globeMaterial);
+		this.globe.setMaterial(globeMaterial);
 		this.globe.setRotationAxis(Rotate.Y_AXIS);
 		this.globe.setRotate(-90.0);
 
@@ -126,7 +123,7 @@ public class SpaceApp extends Application {
 
 		this.pivot.translateXProperty().bind(view3d.widthProperty().divide(2));
 		this.pivot.translateYProperty().bind(view3d.heightProperty().divide(2));
-       	
+	   	
 		this.view3d.setFill(Color.BLACK);
 		this.view3d.setFill(new javafx.scene.paint.ImagePattern(backgroundStars));
 		this.view3d.setCamera(camera);
@@ -287,8 +284,8 @@ public class SpaceApp extends Application {
 		});
 	}
 
-    //Runs the application
-    public static void main(String[] args) {
-        launch();
-    }
+	//Runs the application
+	public static void main(String[] args) {
+		launch();
+	}
 }

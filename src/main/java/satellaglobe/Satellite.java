@@ -1,28 +1,19 @@
 package satellaglobe;
 
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.binding.*;
+import javafx.beans.property.*;
 import javafx.scene.control.*;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.PhongMaterial;
+import javafx.scene.layout.*;
+import javafx.scene.paint.*;
 import javafx.scene.shape.Sphere;
-import javafx.geometry.Insets;
-import javafx.geometry.Point2D;
-import javafx.geometry.Bounds;
+import javafx.geometry.*;
 import java.util.*;
 
 /**
  * Satellite Class to handle 3D representations of live satellites around earth
  */
-
 public class Satellite extends Sphere {
-    private String name;
+	private String name;
 
 	private static final double RADIAN_CONVERSION = Math.PI / 180.0;
 
@@ -35,12 +26,12 @@ public class Satellite extends Sphere {
 	private SatelliteInfoVBox satelliteInfo;
 
 	 /**
-     * Satellite Constructor 
-     * 
-     * @param name for name of satellite
-     * @param latitudes for latitudinal position of satellite
-     * @param longitudes for longitudinal position of satellite in GEO coordinate system
-     * @param magnitudes for (not simulated) distance from earth
+	 * Satellite Constructor 
+	 * 
+	 * @param name for name of satellite
+	 * @param latitudes for latitudinal position of satellite
+	 * @param longitudes for longitudinal position of satellite in GEO coordinate system
+	 * @param magnitudes for (not simulated) distance from earth
 	 */
 	public Satellite(String name, List<Double> latitudes, List<Double> longitudes, List<Double> magnitudes, double listProportion) {
 		super();
@@ -55,8 +46,8 @@ public class Satellite extends Sphere {
 		this.setMagnitudes(magnitudes);
 		this.setListProportion(listProportion);
 
-        PhongMaterial randomColor = new PhongMaterial();
-        randomColor.setDiffuseColor(Color.hsb(Math.random() * 360, 0.5, 1.0));
+		PhongMaterial randomColor = new PhongMaterial();
+		randomColor.setDiffuseColor(Color.hsb(Math.random() * 360, 0.5, 1.0));
 		this.setMaterial(randomColor);
 		
 		this.translateXProperty().bind(Bindings.createDoubleBinding(() -> {
@@ -74,8 +65,8 @@ public class Satellite extends Sphere {
 		}, this.radiusProperty(), this.listProportionProperty()));
 
 		this.localToSceneTransformProperty().addListener((obs, oldVal, newVal) -> {
-            updateSatelliteInfoPosition();
-        });
+			updateSatelliteInfoPosition();
+		});
 
 		this.sceneProperty().addListener((obs, oldScene, newScene) -> {
 			if (newScene != null) {
@@ -92,7 +83,7 @@ public class Satellite extends Sphere {
 					oldRoot.getChildren().remove(satelliteInfo);
 				}
 			}
-        });
+		});
 
 		this.parentProperty().addListener((obs, oldParent, newParent) -> {
 			if (newParent == null) {
@@ -108,20 +99,36 @@ public class Satellite extends Sphere {
 		});
 	}
 
+	/**
+	 * Set naem of satellite 
+	 * @param name String name of satellite
+	 */
 	public void setName(String name) {
 		this.name = name;
 		this.satelliteInfo.setName(name);
 	}
 
+	/**
+	 * Get name of satellite
+	 * @return String name of satellite
+	 */
 	public String getName() {
 		return name;
 	}
 
+	/**
+	 * Set list of latitudes 
+	 * @param latitudes list of double latitudes
+	 */
 	public void setLatitudes(List<Double> latitudes) {
 		this.latitudes = latitudes;
 		this.satelliteInfo.setLatitude(this.getLatitudeAtCurrentProportion());
 	}
 
+	/**
+	 * Get list of latitudes
+	 * @return list of double latitudess
+	 */
 	public List<Double> getLatitudes() {
 		return this.latitudes;
 	}
@@ -134,11 +141,19 @@ public class Satellite extends Sphere {
 		return this.getListValueAtCurrentProportion(latitudes);
 	}
 
+	/**
+	 * Set list of longitudes 
+	 * @param longitudes list of double longitudes
+	 */
 	public void setLongitudes(List<Double> longitudes) {
 		this.longitudes = longitudes;
 		this.satelliteInfo.setLongitude(this.getLongitudeAtCurrentProportion());
 	}
 
+	/**
+	 * Get list of longitudes
+	 * @return list of double longitudes
+	 */
 	public List<Double> getLongitudes() {
 		return this.longitudes;
 	}
@@ -148,7 +163,7 @@ public class Satellite extends Sphere {
 	 * @return double longitude interpolated between two nearest longitudes in their list
 	 */
 	public double getLongitudeAtCurrentProportion() {
-		// Requires special handling because of wrap-around
+		// Requires special handling because of wraparound
 		if (longitudes == null || longitudes.isEmpty()) return 0.0;
 
 		double proportion = this.getListProportion();
@@ -166,7 +181,7 @@ public class Satellite extends Sphere {
 		if (indexLow == indexHigh) {
 			return (low % 360 + 360) % 360;
 		} else {
-			// Account for wrap-around at the 180th degree
+			// Account for wraparound
 			double alpha = scaledIndex - indexLow;
 			double delta = ((high - low + 540.0) % 360.0) - 180.0;
 			double interpolated = low + alpha * delta;
@@ -175,11 +190,19 @@ public class Satellite extends Sphere {
 		}
 	}
 
+	/**
+	 * Set list of magnitudes (distance from earth)
+	 * @param magnitudes list of double magnitudes
+	 */
 	public void setMagnitudes(List<Double> magnitudes) {
 		this.magnitudes = magnitudes;
 		this.satelliteInfo.setMagnitude(this.getMagnitudeAtCurrentProportion());
 	}
 
+	/**
+	 * Get list of magnitudes (distance from earth)
+	 * @return list of double magnitudes
+	 */
 	public List<Double> getMagnitudes() {
 		return this.magnitudes;
 	}
@@ -192,18 +215,30 @@ public class Satellite extends Sphere {
 		return this.getListValueAtCurrentProportion(magnitudes);
 	}
 
+	/**
+	 * Get the listProportion property
+	 * @return DoubleProperty listProportion
+	 */
 	public DoubleProperty listProportionProperty() {
 		return this.listProportion;
 	}
 
+	/**
+	 * Set the value of the listProportion property
+	 * @param listProportion double value of listProportion
+	 */
 	public void setListProportion(double listProportion) {
-		this.listProportion.set(listProportion);
+		this.listProportion.set(Math.clamp(listProportion, 0.0, 1.0));
 
 		this.satelliteInfo.setLatitude(this.getLatitudeAtCurrentProportion());
 		this.satelliteInfo.setLongitude(this.getLongitudeAtCurrentProportion());
 		this.satelliteInfo.setMagnitude(this.getMagnitudeAtCurrentProportion());
 	}
 
+	/**
+	 * Get current listProportion value
+	 * @return listproportion double value
+	 */
 	public double getListProportion() {
 		return this.listProportion.get();
 	}
@@ -272,6 +307,9 @@ public class Satellite extends Sphere {
 		private Label longitude;
 		private Label magnitude;
 
+		/**
+		 * SatelliteInfoVBox Constructor
+		 */
 		public SatelliteInfoVBox() {
 			super(1);
 			this.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
@@ -290,20 +328,36 @@ public class Satellite extends Sphere {
 			this.getChildren().addAll(this.name, this.latitude, this.longitude, this.magnitude);
 		}
 
+		/**
+		 * Set the name of the satellite in the info box
+		 * @param name
+		 */
 		public void setName(String name) {
 			this.name.setText(name);
 		}
 
+		/**
+		 * Set the latitude of the satellite in the info box
+		 * @param latitude
+		 */
 		public void setLatitude(double latitude) {
 			this.latitude.setText("Latitude:\t\t" + Math.round(latitude * 100.) / 100.0 + "°");
 		}
 
+		/**
+		 * Set the longitude of the satellite in the info box
+		 * @param longitude
+		 */
 		public void setLongitude(double longitude) {
 			// Convert longitude to GIS standard for display
 			longitude = ((longitude + 180.0) % 360.0 + 360.0) % 360.0 - 180.0;
 			this.longitude.setText("Longitude:\t" +  Math.round(longitude * 100) / 100.0 + "°");
 		}
 
+		/**
+		 * Set the magnitude (distance) of the satellite in the info box
+		 * @param magnitude
+		 */
 		public void setMagnitude(double magnitude) {
 			this.magnitude.setText("Distance:\t\t" +  Math.round(magnitude) + "km");
 		}
