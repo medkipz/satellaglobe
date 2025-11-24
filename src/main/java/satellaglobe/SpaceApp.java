@@ -99,7 +99,7 @@ public class SpaceApp extends Application {
 	private void initialize3d() {
 		this.globe = new Sphere();
 		this.globeMaterial = new PhongMaterial();
-		this.camera = new ParallelCamera();
+		this.camera = new PerspectiveCamera();
 		this.satellites = new Group();
 		this.model = new Group(globe, satellites);
 		this.pivot = new Group(model);
@@ -191,6 +191,7 @@ public class SpaceApp extends Application {
 
 			for (String previouslyCheckedSatellite : previousCheckedSet) {
 				if (!currentCheckedSet.contains(previouslyCheckedSatellite)) {
+					satellites.getChildren().remove(activeSatellites.get(previouslyCheckedSatellite));
 					activeSatellites.remove(previouslyCheckedSatellite);
 				}
 			}
