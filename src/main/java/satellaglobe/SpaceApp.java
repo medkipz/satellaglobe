@@ -2,14 +2,16 @@ package satellaglobe;
 
 import java.util.*;
 import java.text.SimpleDateFormat;
-import java.util.TimeZone;
+
 import org.controlsfx.control.CheckComboBox;
+import javafx.animation.*;
 import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.control.*;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
@@ -26,107 +28,181 @@ import javafx.geometry.Orientation;
 public class SpaceApp extends Application {
 
     //Scene size variables
-    private static final int HEIGHT = 900;
-    private static final int WIDTH = 1600;	
+	private static final int HEIGHT = (int) Screen.getPrimary().getVisualBounds().getHeight() - 32;
+    private static final int WIDTH = (int) Screen.getPrimary().getVisualBounds().getWidth() - 32;	
 
 	private double mouseStartX;
 	private double modelStartX;
 
-    //Main method override for java applications
+	// Instance variables
+	private ObservableList<String> satelliteNames;
+	private Map<String, String> satelliteIdHashMap;
+	private Image backgroundStars;
+	private Image globeTexture;
+	private Map<String, Satellite> activeSatellites;
+	private List<String> previousCheckedSatellites;
+	private SimpleDateFormat utcFormat;
+
+	private Sphere globe;
+	private PhongMaterial globeMaterial;
+	private Camera camera;
+	private Group satellites;
+	private Group model;
+	private Group pivot;
+	private SubScene view3d;
+
+	private BorderPane ui;
+	private CheckComboBox<String> satellitePicker;
+	private Scene scene;
+	private Slider coordinatesSlider;
+	private Label timeLabel;
+	private Label distanceDisclaimerLabel;
+	private CheckBox realtimeCheckBox;
+	private ToolBar toolBar;
+	private Rotate rotate;
+
+    /**
+	 * Main method override for java applications
+	 */
     @Override
     public void start(Stage stage) {
-		final List<String> satelliteNames = FXCollections.observableList(NasaApiClient.GetAllActiveSatelliteNames());
-		final Map<String, String> satelliteIdHashMap = NasaApiClient.GetSatelliteNameIdMap();
+		initializeData();
 
-		final Image backgroundStars = new Image(getClass().getResource("/satellaglobe/backgroundStars.png").toExternalForm());
-		final Image globeTexture = new Image(getClass().getResource("/satellaglobe/globeTexture.jpg").toExternalForm());
+		initialize3d();
+		initializeUi();
 
-		// Track active satellites by name for fast lookup and safe removal
-		final Map<String, Satellite> activeSatellites = new HashMap<>();
-		// Mutable snapshot of the checked items; keep the reference final so lambda can mutate contents
-		final List<String> previousChecked = new ArrayList<>(/*initial*/ Collections.emptyList());
+		prepareMouseEventListeners();
+		prepareSatellitePickerEventListeners();
+		prepareSliderEventListeners();
+		prepareRealtimeCheckboxEventListeners();
 
-        // 3D model to represent Earth and center it in the scene
-        Sphere globe = new Sphere();
-        PhongMaterial globeMaterial = new PhongMaterial();
-		Camera camera = new ParallelCamera();
-		Group satellites = new Group();
-        Group model = new Group(globe, satellites);
-		Group pivot = new Group(model);
-		SubScene view3d = new SubScene(pivot, WIDTH, HEIGHT, true, SceneAntialiasing.BALANCED);
-		BorderPane ui = new BorderPane();
-		CheckComboBox<String> satellitePicker = new CheckComboBox<>();
-		Scene scene = new Scene(ui, WIDTH, HEIGHT);
-		Slider coordinatesSlider = new Slider();
-		Label timeLabel = new Label();
-		Label distanceDisclaimerLabel = new Label("Note: distance is not simulated.");
-		CheckBox realtimeCheckBox = new CheckBox("Realtime");
-		ToolBar toolBar = new ToolBar();
-		Rotate rotate = new Rotate(0, Rotate.Y_AXIS);
+        //Instantiates the scene
+        stage.setTitle("SatellaGlobe");
+        stage.setScene(scene);
+        stage.show();
+    }
 
-		final SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-		utcFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+	/**
+	 * Helper method for initializing variable data
+	 */
+	private void initializeData() {
+		this.satelliteNames = FXCollections.observableList(NasaApiClient.GetAllActiveSatelliteNames());
+		this.satelliteIdHashMap = NasaApiClient.GetSatelliteNameIdMap();
+		this.backgroundStars = new Image(getClass().getResource("/satellaglobe/backgroundStars.png").toExternalForm());
+		this.globeTexture = new Image(getClass().getResource("/satellaglobe/globeTexture.jpg").toExternalForm());
+		this.activeSatellites = new HashMap<>();
+		this.previousCheckedSatellites = new ArrayList<>(Collections.emptyList());
+		this.utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+		this.utcFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+	}
 
-		satellitePicker.getItems().setAll(satelliteNames);
-		
-        globeMaterial.setDiffuseMap(globeTexture);
-		globe.radiusProperty().bind(view3d.heightProperty().divide(5));
-        globe.setMaterial(globeMaterial);
-		globe.setRotationAxis(Rotate.Y_AXIS);
-		globe.setRotate(-90.0);
+	/**
+	 * Helper method for initializing 3d components
+	 */
+	private void initialize3d() {
+		this.globe = new Sphere();
+		this.globeMaterial = new PhongMaterial();
+		this.camera = new ParallelCamera();
+		this.satellites = new Group();
+		this.model = new Group(globe, satellites);
+		this.pivot = new Group(model);
+		this.view3d = new SubScene(pivot, WIDTH, HEIGHT, true, SceneAntialiasing.BALANCED);
+		this.rotate = new Rotate(0, Rotate.Y_AXIS);
 
-		rotate.setPivotX(0);
-		rotate.setPivotY(0);
-		rotate.setPivotZ(0);
+		this.globeMaterial.setDiffuseMap(globeTexture);
 
-		model.getTransforms().add(rotate);
-		model.setRotationAxis(Rotate.Y_AXIS);
-		model.setTranslateZ(-1);
+		this.globe.radiusProperty().bind(view3d.heightProperty().divide(5));
+        this.globe.setMaterial(globeMaterial);
+		this.globe.setRotationAxis(Rotate.Y_AXIS);
+		this.globe.setRotate(-90.0);
 
-		pivot.translateXProperty().bind(view3d.widthProperty().divide(2));
-		pivot.translateYProperty().bind(view3d.heightProperty().divide(2));
+		this.rotate.setPivotX(0);
+		this.rotate.setPivotY(0);
+		this.rotate.setPivotZ(0);
+
+		this.model.getTransforms().add(rotate);
+		this.model.setRotationAxis(Rotate.Y_AXIS);
+		this.model.setTranslateZ(-1);
+
+		this.pivot.translateXProperty().bind(view3d.widthProperty().divide(2));
+		this.pivot.translateYProperty().bind(view3d.heightProperty().divide(2));
        	
-		view3d.setFill(Color.BLACK);
-		view3d.setFill(new javafx.scene.paint.ImagePattern(backgroundStars));
-		view3d.setCamera(camera);
+		this.view3d.setFill(Color.BLACK);
+		this.view3d.setFill(new javafx.scene.paint.ImagePattern(backgroundStars));
+		this.view3d.setCamera(camera);
+	}
 
-		satellitePicker.setPrefWidth(256);
-		satellitePicker.setMaxWidth(256);
-		satellitePicker.setMinWidth(256);
+	/**
+	 * Helper method for initializing UI components
+	 */
+	private void initializeUi() {
+		this.ui = new BorderPane();
+		this.satellitePicker = new CheckComboBox<>(satelliteNames);
+		this.scene = new Scene(ui, WIDTH, HEIGHT);
+		this.coordinatesSlider = new Slider();
+		this.timeLabel = new Label("Time: " + utcFormat.format(new Date()));
+		this.distanceDisclaimerLabel = new Label("\nNote: distance is not simulated.");
+		this.realtimeCheckBox = new CheckBox("Realtime");
+		this.toolBar = new ToolBar(this.satellitePicker, this.coordinatesSlider, this.timeLabel, this.realtimeCheckBox, this.distanceDisclaimerLabel);
 
-		coordinatesSlider.setMin(0);
-		coordinatesSlider.setMax(1);
-		coordinatesSlider.setValue(0.5);
+		this.satellitePicker.setPrefWidth(256);
+		this.satellitePicker.setMaxWidth(256);
+		this.satellitePicker.setMinWidth(256);
 
-		timeLabel.setText("Time: " + utcFormat.format(NasaApiClient.CURRENT_DATE));
+		this.coordinatesSlider.setMin(0);
+		this.coordinatesSlider.setMax(1);
+		this.coordinatesSlider.setValue(0.5);
+		
+		this.previousCheckedSatellites.clear();
+		this.previousCheckedSatellites.addAll(satellitePicker.getCheckModel().getCheckedItems());
 
-		ui.setCenter(view3d);
+		this.toolBar.setOrientation(Orientation.VERTICAL);
 
-		toolBar.getItems().addAll(satellitePicker, coordinatesSlider, realtimeCheckBox, timeLabel, distanceDisclaimerLabel);
+		this.ui.setCenter(view3d);
+		this.ui.setLeft(toolBar);
+		this.ui.setPrefSize(HEIGHT, 128);
 
-		previousChecked.clear();
-		previousChecked.addAll(satellitePicker.getCheckModel().getCheckedItems());
+		this.view3d.widthProperty().bind(ui.widthProperty());
+		this.view3d.heightProperty().bind(ui.heightProperty());
+	}
 
+	/**
+	 * Helper method for preparing mouse event listeners
+	 */
+	private void prepareMouseEventListeners() {
+		scene.setOnMousePressed(event -> {
+			this.mouseStartX = event.getSceneX();
+			this.modelStartX = this.rotate.getAngle();
+		});
+
+		scene.setOnMouseDragged(event -> {
+			double bgOffsetX = (rotate.getAngle() % 360) / 360.0;
+
+			this.rotate.setAngle(this.modelStartX - (event.getSceneX() - this.mouseStartX) * 0.4);
+			this.view3d.setFill(new ImagePattern(this.backgroundStars, bgOffsetX, 0, 1, 1, true));
+		});
+	}
+
+	/**
+	 * Helper method for preparing satellitePicker event listeners
+	 */
+	private void prepareSatellitePickerEventListeners() {
 		satellitePicker.getCheckModel().getCheckedItems().addListener((ListChangeListener<String>) change -> {
-			List<String> currentChecked = new ArrayList<>(satellitePicker.getCheckModel().getCheckedItems());
+			List<String> currentCheckedList = new ArrayList<>(satellitePicker.getCheckModel().getCheckedItems());
+			Set<String> currentCheckedSet = new HashSet<>(currentCheckedList);
+			Set<String> previousCheckedSet = new HashSet<>(previousCheckedSatellites);
 
-			Set<String> currentSet = new HashSet<>(currentChecked);
-			Set<String> previousSet = new HashSet<>(previousChecked);
-
-			for (String removed : previousSet) {
-				if (!currentSet.contains(removed)) {
-					Satellite toRemove = activeSatellites.remove(removed);
-					if (toRemove != null) {
-						satellites.getChildren().remove(toRemove);
-					}
+			for (String previouslyCheckedSatellite : previousCheckedSet) {
+				if (!currentCheckedSet.contains(previouslyCheckedSatellite)) {
+					activeSatellites.remove(previouslyCheckedSatellite);
 				}
 			}
 
-			for (String added : currentSet) {
-				if (!previousSet.contains(added)) {
-					if (activeSatellites.containsKey(added)) continue;
+			for (String currentlyCheckedSatellite : currentCheckedSet) {
+				if (!previousCheckedSet.contains(currentlyCheckedSatellite)) {
+					if (activeSatellites.containsKey(currentlyCheckedSatellite)) continue;
 
-					String id = satelliteIdHashMap.get(added);
+					String id = satelliteIdHashMap.get(currentlyCheckedSatellite);
 					if (id == null) continue;
 
 					List<List<Double>> coordinates = NasaApiClient.getSatelliteLatLonMag(id);
@@ -136,7 +212,7 @@ public class SpaceApp extends Application {
 					}
 
 					Satellite satellite = new Satellite(
-							added,
+							currentlyCheckedSatellite,
 							coordinates.get(0),
 							coordinates.get(1),
 							coordinates.get(2),
@@ -144,15 +220,20 @@ public class SpaceApp extends Application {
 					);
 
 					satellite.radiusProperty().bind(view3d.heightProperty().divide(25));
-					activeSatellites.put(added, satellite);
+					activeSatellites.put(currentlyCheckedSatellite, satellite);
 					satellites.getChildren().add(satellite);
 				}
 			}
 
-			previousChecked.clear();
-			previousChecked.addAll(currentChecked);
+			previousCheckedSatellites.clear();
+			previousCheckedSatellites.addAll(currentCheckedList);
 		});
+	}
 
+	/**
+	 * Helper method for preparing slider event listeners
+	 */
+	private void prepareSliderEventListeners() {
 		coordinatesSlider.valueProperty().addListener((objects, oldValue, newValue) -> {
 			double listProportion = newValue.doubleValue();
 
@@ -163,15 +244,21 @@ public class SpaceApp extends Application {
 			}
 
 			long millis = NasaApiClient.START_DATE.getTime() + (long) Math.round(listProportion * (NasaApiClient.END_DATE.getTime() - NasaApiClient.START_DATE.getTime()));
-			timeLabel.setText("Time: " + utcFormat.format(new Date(millis)));
+			this.timeLabel.setText("Time: " + utcFormat.format(new Date(millis)));
 		});
 
+	}
+
+	/**
+	 * Helper method for realtimeCheckBox slider event listeners
+	 */
+	private void prepareRealtimeCheckboxEventListeners() {
 		realtimeCheckBox.selectedProperty().addListener((obs, wasChecked, isChecked) -> {
 			if (isChecked) {
-				coordinatesSlider.setDisable(true);
-				final javafx.animation.Timeline[] realtimeTimelineHolder = new javafx.animation.Timeline[1];
-				realtimeTimelineHolder[0] = new javafx.animation.Timeline(
-					new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), evt -> {
+				this.coordinatesSlider.setDisable(true);
+				final Timeline[] realtimeTimelineHolder = new Timeline[1];
+				realtimeTimelineHolder[0] = new Timeline(
+					new KeyFrame(javafx.util.Duration.millis(100), evt -> {
 						if (!realtimeCheckBox.isSelected()) {
 							realtimeTimelineHolder[0].stop();
 							return;
@@ -198,31 +285,8 @@ public class SpaceApp extends Application {
 				coordinatesSlider.setDisable(false);
 			}
 		});
+	}
 
-		toolBar.setOrientation(Orientation.VERTICAL);
-		ui.setLeft(toolBar);
-		ui.setPrefSize(HEIGHT, 128);
-
-		view3d.widthProperty().bind(ui.widthProperty());
-		view3d.heightProperty().bind(ui.heightProperty());
-		
-		scene.setOnMousePressed(event -> {
-			mouseStartX = event.getSceneX();
-			modelStartX = rotate.getAngle();
-		});
-
-		scene.setOnMouseDragged(event -> {
-			rotate.setAngle(modelStartX - (event.getSceneX() - mouseStartX) * 0.4);
-
-			double bgOffsetX = (rotate.getAngle() % 360) / 360.0;
-			view3d.setFill(new javafx.scene.paint.ImagePattern(backgroundStars, bgOffsetX, 0, 1, 1, true));
-		});
-		
-        //Instantiates the scene
-        stage.setTitle("SatellaGlobe");
-        stage.setScene(scene);
-        stage.show();
-    }
     //Runs the application
     public static void main(String[] args) {
         launch();
